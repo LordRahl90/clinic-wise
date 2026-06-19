@@ -179,12 +179,10 @@ func TestService_Dispatch(t *testing.T) {
 	require.Equal(t, models.Unavailable, dispatched.Status)
 	require.Equal(t, 2, writerCallCount)
 
-	storedPrescriptionID := ulid.MustParse(created.ID)
-	storedBytes, err := storedPrescriptionID.MarshalBinary()
-	require.NoError(t, err)
-
 	var stored models.Prescription
-	require.NoError(t, db.Where("id = ?", storedBytes).First(&stored).Error)
+	createdID, err := ulid.ParseStrict(created.ID)
+	require.NoError(t, err)
+	require.NoError(t, db.Where("id = ?", createdID).First(&stored).Error)
 	require.Equal(t, models.Unavailable, stored.Status)
 
 	_, err = svc.Dispatch(t.Context(), pharmacist.ID, ulid.MustParse(created.ID))
@@ -235,12 +233,10 @@ func TestService_DispatchRejectsExpiredPrescription(t *testing.T) {
 	require.ErrorIs(t, err, ErrPrescriptionExpired)
 	require.Equal(t, 1, writerCallCount)
 
-	storedPrescriptionID := ulid.MustParse(created.ID)
-	storedBytes, err := storedPrescriptionID.MarshalBinary()
-	require.NoError(t, err)
-
 	var stored models.Prescription
-	require.NoError(t, db.Where("id = ?", storedBytes).First(&stored).Error)
+	createdID, err := ulid.ParseStrict(created.ID)
+	require.NoError(t, err)
+	require.NoError(t, db.Where("id = ?", createdID).First(&stored).Error)
 	require.Equal(t, models.ActivePrescription, stored.Status)
 }
 
@@ -279,12 +275,10 @@ func TestService_CreateContinuesWhenEventWriteFails(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, created.ID)
 
-	storedPrescriptionID := ulid.MustParse(created.ID)
-	storedBytes, err := storedPrescriptionID.MarshalBinary()
-	require.NoError(t, err)
-
 	var stored models.Prescription
-	require.NoError(t, db.Where("id = ?", storedBytes).First(&stored).Error)
+	createdID, err := ulid.ParseStrict(created.ID)
+	require.NoError(t, err)
+	require.NoError(t, db.Where("id = ?", createdID).First(&stored).Error)
 	require.Equal(t, models.ActivePrescription, stored.Status)
 }
 
@@ -333,11 +327,9 @@ func TestService_DispatchContinuesWhenEventWriteFails(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, models.Unavailable, dispatched.Status)
 
-	storedPrescriptionID := ulid.MustParse(created.ID)
-	storedBytes, err := storedPrescriptionID.MarshalBinary()
-	require.NoError(t, err)
-
 	var stored models.Prescription
-	require.NoError(t, db.Where("id = ?", storedBytes).First(&stored).Error)
+	createdID, err := ulid.ParseStrict(created.ID)
+	require.NoError(t, err)
+	require.NoError(t, db.Where("id = ?", createdID).First(&stored).Error)
 	require.Equal(t, models.Unavailable, stored.Status)
 }

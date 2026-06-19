@@ -47,13 +47,9 @@ func (s *Service) Create(ctx context.Context, req *CreatePrescriptionRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	appointmentBytes, err := appointmentID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
 
 	var appointment models.Appointment
-	if err := s.db.WithContext(ctx).Where("id = ?", appointmentBytes).First(&appointment).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", appointmentID).First(&appointment).Error; err != nil {
 		return nil, err
 	}
 
@@ -72,13 +68,8 @@ func (s *Service) Create(ctx context.Context, req *CreatePrescriptionRequest) (*
 }
 
 func (s *Service) Dispatch(ctx context.Context, pharmacistID, prescriptionID ulid.ULID) (*Response, error) {
-	pharmacistBytes, err := pharmacistID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
 	var pharmacist models.User
-	if err := s.db.WithContext(ctx).Where("id = ?", pharmacistBytes).First(&pharmacist).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", pharmacistID).First(&pharmacist).Error; err != nil {
 		return nil, err
 	}
 	if pharmacist.Role != models.Pharmacist {
@@ -109,13 +100,8 @@ func (s *Service) Dispatch(ctx context.Context, pharmacistID, prescriptionID uli
 }
 
 func (s *Service) Find(ctx context.Context, userID, prescriptionID ulid.ULID) (*Response, error) {
-	prescriptionBytes, err := prescriptionID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
 	var m models.Prescription
-	if err := s.db.WithContext(ctx).Where("id = ?", prescriptionBytes).First(&m).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", prescriptionID).First(&m).Error; err != nil {
 		return nil, err
 	}
 
@@ -127,13 +113,8 @@ func (s *Service) Find(ctx context.Context, userID, prescriptionID ulid.ULID) (*
 }
 
 func (s *Service) FindByAppointment(ctx context.Context, userID, appointmentID ulid.ULID) ([]Response, error) {
-	appointmentBytes, err := appointmentID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
 	var appointment models.Appointment
-	if err := s.db.WithContext(ctx).Where("id = ?", appointmentBytes).First(&appointment).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", appointmentID).First(&appointment).Error; err != nil {
 		return nil, err
 	}
 

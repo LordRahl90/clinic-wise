@@ -1,8 +1,9 @@
 package appointments
 
 import (
-	"clinic-wise/db/models"
 	"context"
+
+	"clinic-wise/db/models"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -26,6 +27,25 @@ func (s *Service) Create(ctx context.Context, req *CreateAppointmentRequest) (*R
 	}
 
 	return ResponseFromModel(m), nil
+}
+
+// Complete marks an appointment as completed by the assigned doctor.
+func (s *Service) Complete(ctx context.Context, userID, id ulid.ULID) (*Response, error) {
+	var m models.Appointment
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&m).Error; err != nil {
+		return nil, err
+	}
+
+	if m.DoctorID != userID {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	m.Status = models.AppointmentStatusCompleted
+	if err := s.db.WithContext(ctx).Save(&m).Error; err != nil {
+		return nil, err
+	}
+
+	return ResponseFromModel(&m), nil
 }
 
 // Find finds an appointment by ID

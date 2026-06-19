@@ -279,3 +279,38 @@ func TestFindAppointmentsRoute(t *testing.T) {
 		require.False(t, containsID(body, appt.ID), "appointment should not appear under a different hospital")
 	})
 }
+
+func TestCompleteAppointmentRoute(t *testing.T) {
+	svr := newAppointmentServer()
+	hospitalID := ulid.Make()
+	doctor, patient, appt := appointmentFixture(t, svr, hospitalID)
+
+	t.Run("no auth returns 401", func(t *testing.T) {
+		res := testhelper.NewRequest(t, svr.router, http.MethodPatch, "/appointments/"+appt.ID+"/complete", "", "")
+		require.Equal(t, http.StatusUnauthorized, res.Code)
+	})
+
+	t.Run("patient cannot complete", func(t *testing.T) {
+		token, err := testhelper.CreateToken(*patient, svr.config.SigningSecret)
+		require.NoError(t, err)
+		res := testhelper.NewRequest(t, svr.router, http.MethodPatch, "/appointments/"+appt.ID+"/complete", token, "")
+		require.Equal(t, http.StatusForbidden, res.Code)
+	})
+
+	t.Run("doctor can complete", func(t *testing.T) {
+		token, err := testhelper.CreateToken(*doctor, svr.config.SigningSecret)
+		require.NoError(t, err)
+		res := testhelper.NewRequest(t, svr.router, http.MethodPatch, "/appointments/"+appt.ID+"/complete", token, "")
+		require.Equal(t, http.StatusOK, res.Code)
+
+		var body appointments.Response
+		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &body))
+		require.Equal(t, appt.ID, body.ID)
+
+		var stored models.Appointment
+		apptID, err := ulid.ParseStrict(appt.ID)
+		require.NoError(t, err)
+		require.NoError(t, db.Where("id = ?", apptID).First(&stored).Error)
+		require.Equal(t, models.AppointmentStatusCompleted, stored.Status)
+	})
+}

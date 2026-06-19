@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"clinic-wise/db/models"
 	"clinic-wise/internal/server/middlewares"
 	"clinic-wise/internal/services/appointments"
 
@@ -16,6 +17,7 @@ import (
 
 type appointmentService interface {
 	Create(ctx context.Context, req *appointments.CreateAppointmentRequest) (*appointments.Response, error)
+	Complete(ctx context.Context, userID, id ulid.ULID) (*appointments.Response, error)
 	Find(ctx context.Context, userID, id ulid.ULID) (*appointments.Response, error)
 	FindAppointments(ctx context.Context, hospitalID ulid.ULID) ([]appointments.Response, error)
 	FindAppointmentByUser(ctx context.Context, userID ulid.ULID, page, limit int) ([]appointments.Response, error)
@@ -29,6 +31,7 @@ func (s *Server) appointmentRoutes() {
 		appointment.GET("", s.findAppointments)
 		appointment.GET("/user", s.findAppointmentsByUser)
 		appointment.GET("/:id", s.findAppointment)
+		appointment.PATCH("/:id/complete", s.completeAppointment)
 	}
 }
 
@@ -119,6 +122,37 @@ func (s *Server) findAppointment(c *gin.Context) {
 
 	res, err := s.appointmentService.Find(c.Request.Context(), userID.ID, id)
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (s *Server) completeAppointment(c *gin.Context) {
+	user, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if user.Role != models.Doctor {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only doctors can complete appointments"})
+		return
+	}
+
+	id, err := ulid.ParseStrict(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	res, err := s.appointmentService.Complete(c.Request.Context(), user.ID, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

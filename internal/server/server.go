@@ -6,6 +6,7 @@ import (
 	"clinic-wise/internal/server/middlewares"
 	"clinic-wise/internal/services/appointments"
 	authservice "clinic-wise/internal/services/auth"
+	"clinic-wise/internal/services/diagnosis"
 	"clinic-wise/internal/services/hospital"
 	"clinic-wise/internal/services/integrations/queue"
 	"clinic-wise/internal/services/notes"
@@ -30,6 +31,7 @@ type Server struct {
 
 	authService         AuthService
 	appointmentService  appointmentService
+	diagnosisService    DiagnosisService
 	hospitalService     HospitalsService
 	noteService         NotesService
 	prescriptionService PrescriptionService
@@ -50,6 +52,7 @@ func New(config *Config) *Server {
 
 		hospitalService:     hospital.New(config.DB),
 		appointmentService:  appointments.New(config.DB),
+		diagnosisService:    diagnosis.New(config.DB),
 		noteService:         notes.New(config.DB, config.Writer),
 		prescriptionService: prescriptions.New(config.DB, prescriptionWriter),
 	}
@@ -58,6 +61,7 @@ func New(config *Config) *Server {
 	s.hospitalRoutes()
 	s.authRoutes()
 	s.appointmentRoutes()
+	s.diagnosisRoutes()
 	s.noteRoutes()
 	s.prescriptionRoutes()
 

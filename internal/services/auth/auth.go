@@ -92,11 +92,7 @@ func (s *Service) InviteUser(ctx context.Context, req *InviteUserRequest) (*User
 
 func (s *Service) AcceptInvite(ctx context.Context, inviteID ulid.ULID, req *AcceptInviteRequest) (*SessionResponse, error) {
 	var user models.User
-	inviteBytes, err := inviteID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	if err := s.db.WithContext(ctx).Where("id = ?", inviteBytes).First(&user).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", inviteID).First(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -120,11 +116,7 @@ func (s *Service) AcceptInvite(ctx context.Context, inviteID ulid.ULID, req *Acc
 
 func (s *Service) ResetPassword(ctx context.Context, userID ulid.ULID, req *ResetPasswordRequest) (*SessionResponse, error) {
 	var user models.User
-	userBytes, err := userID.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	if err := s.db.WithContext(ctx).Where("id = ?", userBytes).First(&user).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
 	}
 
