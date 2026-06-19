@@ -1,0 +1,17 @@
+services:
+  database:
+    image: mysql:latest
+    container_name: clinic_wise_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: clinic_wise_user
+      MYSQL_PASSWORD: p@ssword
+      MYSQL_DATABASE: clinic_wise
+    ports:
+      - "33307:3306"
+    networks:
+      - clinic_wise
+
+networks:
+  clinic_wise:
+    driver: bridge
