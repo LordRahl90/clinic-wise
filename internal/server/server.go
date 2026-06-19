@@ -41,6 +41,10 @@ type Server struct {
 
 func New(config *Config) *Server {
 	router := gin.Default()
+	noteWriter := notes.NewNoopWriter()
+	if config.Writer != nil {
+		noteWriter = config.Writer
+	}
 	prescriptionWriter := prescriptions.NewNoopEventWriter()
 	if config.Writer != nil {
 		prescriptionWriter = config.Writer
@@ -56,7 +60,7 @@ func New(config *Config) *Server {
 		appointmentService:  appointments.New(config.DB),
 		auditTrailService:   audittrail.New(config.DB),
 		diagnosisService:    diagnosis.New(config.DB),
-		noteService:         notes.New(config.DB, config.Writer),
+		noteService:         notes.New(config.DB, noteWriter),
 		prescriptionService: prescriptions.New(config.DB, prescriptionWriter),
 	}
 

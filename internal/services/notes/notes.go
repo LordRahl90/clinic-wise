@@ -18,6 +18,10 @@ type Writer interface {
 	Write(ctx context.Context, event *entities.Event) error
 }
 
+type DictationService interface {
+	Transcribe(ctx context.Context, audio []byte) (string, error)
+}
+
 type Service struct {
 	writer Writer
 	db     *gorm.DB
@@ -28,6 +32,10 @@ func New(db *gorm.DB, writer Writer) *Service {
 		writer: writer,
 		db:     db,
 	}
+}
+
+func NewNoopWriter() Writer {
+	return noopWriter{}
 }
 
 func (s *Service) Create(ctx context.Context, req *CreateNoteRequest) (*Response, error) {
@@ -59,7 +67,7 @@ func (s *Service) Create(ctx context.Context, req *CreateNoteRequest) (*Response
 
 func (s *Service) Update(ctx context.Context, userID, noteID ulid.ULID, content string) error {
 	var exists models.Note
-	if err := s.db.WithContext(ctx).First(&exists, noteID).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", noteID).First(&exists).Error; err != nil {
 		return err
 	}
 
@@ -119,3 +127,10 @@ func makeNoteEvent(note *models.Note, eventType entities.EventType) *entities.Ev
 	}
 	return evt
 }
+
+type noopWriter struct{}
+
+func (noopWriter) Write(context.Context, *entities.Event) error {
+	return nil
+}
+
