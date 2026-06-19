@@ -1,4 +1,4 @@
-package hospital
+package server
 
 import (
 	"clinic-wise/db/migrator"
@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -35,14 +34,4 @@ func TestMain(m *testing.M) {
 	}
 
 	code = m.Run()
-}
-
-func TestCreate(t *testing.T) {
-	svc := New(db)
-	req := &CreateHospitalRequest{
-		Name: "Test Hospital",
-	}
-	res, err := svc.Create(t.Context(), req)
-	require.NoError(t, err)
-	require.NotEmpty(t, res.ID)
 }

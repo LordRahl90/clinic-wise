@@ -9,15 +9,10 @@ import (
 
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 const (
 	signingSecret = "secret"
-)
-
-var (
-	db *gorm.DB
 )
 
 func TestMain(m *testing.M) {
@@ -31,8 +26,8 @@ func TestMain(m *testing.M) {
 
 func TestGenerateToken(t *testing.T) {
 	user := TokenData{
-		UserID: ulid.Make(),
-		Role:   models.Doctor,
+		ID:   ulid.Make(),
+		Role: models.Doctor,
 	}
 
 	token, err := GenerateToken(t.Context(), user, signingSecret, time.Hour)
@@ -44,5 +39,5 @@ func TestGenerateToken(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, res)
 
-	require.Equal(t, res.UserID, user.UserID)
+	require.Equal(t, res.ID, user.ID)
 }

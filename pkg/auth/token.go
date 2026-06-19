@@ -36,7 +36,7 @@ func TokenCategoryFromString(s string) TokenCategory {
 }
 
 type TokenData struct {
-	UserID        ulid.ULID       `json:"user_id"`
+	ID            ulid.ULID       `json:"id"`
 	Role          models.UserRole `json:"role"`
 	SessionID     string          `json:"session_id"`
 	TokenCategory TokenCategory   `json:"token_category"`
@@ -50,7 +50,7 @@ func GenerateToken(ctx context.Context, user TokenData, signingSecret string, du
 	// Create the token
 	user.RegisteredClaims = jwt.RegisteredClaims{
 		ID:        ulid.Make().String(),
-		Subject:   user.UserID.String(),
+		Subject:   user.ID.String(),
 		Issuer:    fmt.Sprintf("%s-%s", "clinic-wise", env),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),

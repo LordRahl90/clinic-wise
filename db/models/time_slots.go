@@ -17,3 +17,8 @@ type Timeslot struct {
 
 	gorm.Model
 }
+
+func (t *Timeslot) BeforeCreate(_ *gorm.DB) (err error) {
+	t.ID = ulid.Make()
+	return
+}

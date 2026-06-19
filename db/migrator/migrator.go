@@ -10,6 +10,9 @@ var m = []interface{}{
 	&models.Hospital{},
 	&models.User{},
 	&models.Timeslot{},
+	&models.Appointment{},
+	&models.Note{},
+	&models.Prescription{},
 }
 
 func Migrate(db *gorm.DB) error {

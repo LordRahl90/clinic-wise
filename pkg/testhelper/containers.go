@@ -9,7 +9,7 @@ import (
 // GetMySQLContainer returns mysql container
 func GetMySQLContainer(ctx context.Context) (*mysqlModule.MySQLContainer, error) {
 	return mysqlModule.Run(ctx, "mysql:8.0",
-		mysqlModule.WithDatabase("metis"),
+		mysqlModule.WithDatabase("clinic_wise_test"),
 		mysqlModule.WithUsername("root"),
 		mysqlModule.WithPassword("rootpassword"),
 	)

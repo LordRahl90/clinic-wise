@@ -26,7 +26,7 @@ type User struct {
 	gorm.Model
 }
 
-func (u User) BeforeCreate(_ *gorm.DB) (err error) {
-	u.ID = ulid.Make()
-	return
-}
+//func (u User) BeforeCreate(_ *gorm.DB) (err error) {
+//	u.ID = ulid.Make()
+//	return
+//}

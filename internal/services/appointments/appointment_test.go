@@ -1,13 +1,16 @@
-package hospital
+package appointments
 
 import (
-	"clinic-wise/db/migrator"
-	"clinic-wise/pkg/testhelper"
+	"clinic-wise/db/models"
 	"context"
 	"log"
 	"os"
 	"testing"
 
+	"clinic-wise/db/migrator"
+	"clinic-wise/pkg/testhelper"
+
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -37,10 +40,18 @@ func TestMain(m *testing.M) {
 	code = m.Run()
 }
 
-func TestCreate(t *testing.T) {
+func TestService_Create(t *testing.T) {
 	svc := New(db)
-	req := &CreateHospitalRequest{
-		Name: "Test Hospital",
+	doctor := testhelper.CreateUser(db, models.Doctor)
+	require.NotNil(t, doctor)
+	patient := testhelper.CreateUser(db, models.Patient)
+	require.NotNil(t, patient)
+	req := &CreateAppointmentRequest{
+		PatientID:   patient.ID.String(),
+		DoctorID:    doctor.ID.String(),
+		TimeslotID:  ulid.Make().String(),
+		HospitalID:  ulid.Make().String(),
+		Description: "Test appointment",
 	}
 	res, err := svc.Create(t.Context(), req)
 	require.NoError(t, err)

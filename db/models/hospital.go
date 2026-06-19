@@ -10,10 +10,10 @@ type Hospital struct {
 	Name string    `json:"name"`
 	gorm.Model
 
-	Users []User `json:"users"`
+	//Users []User `json:"users"`
 }
 
-func (h Hospital) BeforeCreate(_ *gorm.DB) (err error) {
-	h.ID = ulid.Make()
-	return
-}
+//func (h Hospital) BeforeCreate(_ *gorm.DB) (err error) {
+//	h.ID = ulid.Make()
+//	return
+//}

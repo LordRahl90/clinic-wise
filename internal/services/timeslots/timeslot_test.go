@@ -1,13 +1,17 @@
 package timeslots
 
 import (
-	"clinic-wise/db/migrator"
-	"clinic-wise/pkg/testhelper"
 	"context"
 	"log"
 	"os"
 	"testing"
+	"time"
 
+	"clinic-wise/db/migrator"
+	"clinic-wise/pkg/testhelper"
+
+	"github.com/oklog/ulid/v2"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -39,11 +43,36 @@ func TestMain(m *testing.M) {
 func TestService_Create(t *testing.T) {
 	svc := New(db)
 	req := &CreateTimeslotRequest{
-		StartTime: "2024-06-01T09:00:00Z",
-		EndTime:   "2024-06-01T10:00:00Z",
+		HospitalID: ulid.Make().String(),
+		UserID:     ulid.Make().String(),
+		Date:       time.Now().Format(time.DateOnly),
+		StartTime:  time.Now().Format(time.TimeOnly),
+		EndTime:    time.Now().Add(30 * time.Minute).Format(time.TimeOnly),
 	}
-	err := svc.Create(t.Context(), req)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	res, err := svc.Create(t.Context(), req)
+	require.NoError(t, err)
+	require.NotEmpty(t, res.ID)
+}
+
+func TestFindByUser(t *testing.T) {
+	userID := ulid.Make()
+	svc := New(db)
+
+	for i := 0; i < 3; i++ {
+		req := &CreateTimeslotRequest{
+			UserID:     userID.String(),
+			HospitalID: ulid.Make().String(),
+			Date:       time.Now().Format(time.DateOnly),
+			StartTime:  time.Now().Format(time.TimeOnly),
+			EndTime:    time.Now().Add(30 * time.Minute).Format(time.TimeOnly),
+		}
+
+		res, err := svc.Create(t.Context(), req)
+		require.NoError(t, err)
+		require.NotEmpty(t, res.ID)
 	}
+
+	result, err := svc.FindByUser(t.Context(), userID)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(result))
 }
