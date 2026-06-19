@@ -1,13 +1,15 @@
 package server
 
 import (
+	"log/slog"
+
 	"clinic-wise/internal/server/middlewares"
 	"clinic-wise/internal/services/appointments"
 	authservice "clinic-wise/internal/services/auth"
 	"clinic-wise/internal/services/hospital"
 	"clinic-wise/internal/services/integrations/queue"
 	"clinic-wise/internal/services/notes"
-	"log/slog"
+	"clinic-wise/internal/services/prescriptions"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -26,14 +28,19 @@ type Server struct {
 
 	authMiddleware *middlewares.AuthMiddleware
 
-	authService        AuthService
-	appointmentService appointmentService
-	hospitalService    HospitalsService
-	noteService        NotesService
+	authService         AuthService
+	appointmentService  appointmentService
+	hospitalService     HospitalsService
+	noteService         NotesService
+	prescriptionService PrescriptionService
 }
 
 func New(config *Config) *Server {
 	router := gin.Default()
+	prescriptionWriter := prescriptions.NewNoopEventWriter()
+	if config.Writer != nil {
+		prescriptionWriter = config.Writer
+	}
 
 	s := &Server{
 		router:         router,
@@ -41,9 +48,10 @@ func New(config *Config) *Server {
 		authMiddleware: middlewares.NewAuthMiddleware(config.SigningSecret),
 		authService:    authservice.New(config.DB, config.SigningSecret),
 
-		hospitalService:    hospital.New(config.DB),
-		appointmentService: appointments.New(config.DB),
-		noteService:        notes.New(config.DB, config.Writer),
+		hospitalService:     hospital.New(config.DB),
+		appointmentService:  appointments.New(config.DB),
+		noteService:         notes.New(config.DB, config.Writer),
+		prescriptionService: prescriptions.New(config.DB, prescriptionWriter),
 	}
 
 	// register routes
@@ -51,6 +59,7 @@ func New(config *Config) *Server {
 	s.authRoutes()
 	s.appointmentRoutes()
 	s.noteRoutes()
+	s.prescriptionRoutes()
 
 	return s
 }

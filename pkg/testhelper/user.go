@@ -1,10 +1,11 @@
 package testhelper
 
 import (
-	"clinic-wise/db/models"
-	"clinic-wise/pkg/auth"
 	"context"
 	"time"
+
+	"clinic-wise/db/models"
+	"clinic-wise/pkg/auth"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/oklog/ulid/v2"
@@ -31,6 +32,7 @@ func CreateUser(db *gorm.DB, role models.UserRole) *models.User {
 func CreateToken(user models.User, signingSecret string) (string, error) {
 	tokenData := auth.TokenData{
 		ID:            user.ID,
+		Role:          user.Role,
 		TokenCategory: auth.TokenCategoryAccess,
 		Expiry:        int(time.Now().Add(time.Hour * 24 * 7).Unix()),
 	}
