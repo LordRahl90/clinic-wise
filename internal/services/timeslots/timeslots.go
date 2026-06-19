@@ -2,7 +2,9 @@ package timeslots
 
 import (
 	"clinic-wise/db/models"
+	"clinic-wise/internal/services/audittrail"
 	"context"
+	"log/slog"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -26,6 +28,19 @@ func (s *Service) Create(ctx context.Context, req *CreateTimeslotRequest) (*Resp
 	}
 	if err := s.db.WithContext(ctx).Create(timeslot).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    timeslot.UserID,
+		Action:     "timeslot_created",
+		EntityType: "timeslot",
+		EntityID:   timeslot.ID.String(),
+		Message:    "created timeslot on " + timeslot.Date,
+		Changes: []audittrail.Change{
+			{Field: "start_time", After: timeslot.StartTime},
+			{Field: "end_time", After: timeslot.EndTime},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record timeslot create audit", "timeslot_id", timeslot.ID.String(), "error", err)
 	}
 
 	return ResponseFromModel(timeslot), nil

@@ -49,7 +49,7 @@ func (s *Server) createDiagnosis(c *gin.Context) {
 
 	res, err := s.diagnosisService.Create(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (s *Server) getDiagnosis(c *gin.Context) {
 
 	res, err := s.diagnosisService.Find(c.Request.Context(), user.ID, diagnosisID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -95,7 +95,7 @@ func (s *Server) listDiagnoses(c *gin.Context) {
 
 	res, err := s.diagnosisService.FindByUser(c.Request.Context(), user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (s *Server) dismissDiagnosis(c *gin.Context) {
 
 	res, err := s.diagnosisService.Dismiss(c.Request.Context(), user.ID, diagnosisID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 

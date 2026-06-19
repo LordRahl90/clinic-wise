@@ -9,6 +9,7 @@ import (
 
 	"clinic-wise/db/models"
 	"clinic-wise/internal/entities"
+	"clinic-wise/internal/services/audittrail"
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
@@ -63,6 +64,20 @@ func (s *Service) Create(ctx context.Context, req *CreatePrescriptionRequest) (*
 	if err := s.writer.Write(ctx, makePrescriptionEvent(m, entities.PrescriptionCreated)); err != nil {
 		slog.ErrorContext(ctx, "failed to emit prescription event", "event_type", entities.PrescriptionCreated, "prescription_id", m.ID.String(), "error", err)
 	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       m.DoctorID,
+		Action:        "prescription_created",
+		EntityType:    "prescription",
+		EntityID:      m.ID.String(),
+		AppointmentID: m.AppointmentID.String(),
+		Message:       "created prescription for appointment " + m.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "details", After: m.Details},
+			{Field: "status", After: m.Status},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record prescription create audit", "prescription_id", m.ID.String(), "error", err)
+	}
 
 	return FromModel(m), nil
 }
@@ -88,12 +103,26 @@ func (s *Service) Dispatch(ctx context.Context, pharmacistID, prescriptionID uli
 		return nil, ErrPrescriptionUnavailable
 	}
 
+	previousStatus := prescription.Status
 	prescription.Status = models.Unavailable
 	if err := s.db.WithContext(ctx).Save(&prescription).Error; err != nil {
 		return nil, err
 	}
 	if err := s.writer.Write(ctx, makePrescriptionEvent(&prescription, entities.PrescriptionUpdated)); err != nil {
 		slog.ErrorContext(ctx, "failed to emit prescription event", "event_type", entities.PrescriptionUpdated, "prescription_id", prescription.ID.String(), "error", err)
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       pharmacistID,
+		Action:        "prescription_dispatched",
+		EntityType:    "prescription",
+		EntityID:      prescription.ID.String(),
+		AppointmentID: prescription.AppointmentID.String(),
+		Message:       "dispatched prescription for appointment " + prescription.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "status", Before: previousStatus, After: prescription.Status},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record prescription dispatch audit", "prescription_id", prescription.ID.String(), "error", err)
 	}
 
 	return FromModel(&prescription), nil

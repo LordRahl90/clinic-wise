@@ -46,7 +46,7 @@ func (s *Server) createHospital(c *gin.Context) {
 	req.UserID = user.ID
 	res, err := s.hospitalService.Create(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -72,7 +72,7 @@ func (s *Server) hospitalStats(c *gin.Context) {
 
 	res, err := s.hospitalService.Stats(c.Request.Context(), hospitalID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 

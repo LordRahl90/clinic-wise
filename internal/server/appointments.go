@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/oklog/ulid/v2"
-	"gorm.io/gorm"
 )
 
 type appointmentService interface {
@@ -42,14 +40,16 @@ func (s *Server) createAppointment(c *gin.Context) {
 		return
 	}
 
+	userID, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	request.ActorID = userID.ID.String()
+
 	res, err := s.appointmentService.Create(c.Request.Context(), request)
 	if err != nil {
-		// we should check for ulid format errors as well
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (s *Server) findAppointments(c *gin.Context) {
 
 	res, err := s.appointmentService.FindAppointments(c.Request.Context(), hospitalID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -79,7 +79,6 @@ func (s *Server) findAppointments(c *gin.Context) {
 }
 
 func (s *Server) findAppointmentsByUser(c *gin.Context) {
-	// extract userID from middleware
 	userID, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -99,7 +98,7 @@ func (s *Server) findAppointmentsByUser(c *gin.Context) {
 
 	res, err := s.appointmentService.FindAppointmentByUser(c.Request.Context(), userID.ID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -113,7 +112,6 @@ func (s *Server) findAppointment(c *gin.Context) {
 		return
 	}
 
-	// extract userID from middleware
 	userID, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -122,7 +120,7 @@ func (s *Server) findAppointment(c *gin.Context) {
 
 	res, err := s.appointmentService.Find(c.Request.Context(), userID.ID, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 
@@ -149,11 +147,7 @@ func (s *Server) completeAppointment(c *gin.Context) {
 
 	res, err := s.appointmentService.Complete(c.Request.Context(), user.ID, id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 

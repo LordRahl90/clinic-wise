@@ -2,8 +2,10 @@ package diagnosis
 
 import (
 	"context"
+	"log/slog"
 
 	"clinic-wise/db/models"
+	"clinic-wise/internal/services/audittrail"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -31,6 +33,20 @@ func (s *Service) Create(ctx context.Context, req *CreateDiagnosisRequest) (*Res
 
 	if err := s.db.WithContext(ctx).Create(m).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       m.DoctorID,
+		Action:        "diagnosis_created",
+		EntityType:    "diagnosis",
+		EntityID:      m.ID.String(),
+		AppointmentID: m.AppointmentID.String(),
+		Message:       "added diagnosis to appointment " + m.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "diagnosis", After: m.Diagnosis},
+			{Field: "details", After: m.Details},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record diagnosis create audit", "diagnosis_id", m.ID.String(), "error", err)
 	}
 
 	return FromModel(m), nil
@@ -62,6 +78,19 @@ func (s *Service) Dismiss(ctx context.Context, doctorID, diagnosisID ulid.ULID) 
 	m.Dismissed = true
 	if err := s.db.WithContext(ctx).Save(&m).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       doctorID,
+		Action:        "diagnosis_dismissed",
+		EntityType:    "diagnosis",
+		EntityID:      m.ID.String(),
+		AppointmentID: m.AppointmentID.String(),
+		Message:       "dismissed diagnosis for appointment " + m.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "dismissed", Before: false, After: true},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record diagnosis dismiss audit", "diagnosis_id", m.ID.String(), "error", err)
 	}
 
 	return FromModel(&m), nil

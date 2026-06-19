@@ -136,7 +136,7 @@ func TestFindAppointmentRoute(t *testing.T) {
 		require.NoError(t, err)
 
 		res := testhelper.NewRequest(t, svr.router, http.MethodGet, "/appointments/"+appt.ID, token, "")
-		require.Equal(t, http.StatusInternalServerError, res.Code)
+		require.Equal(t, http.StatusNotFound, res.Code)
 	})
 
 	t.Run("doctor can access their appointment", func(t *testing.T) {

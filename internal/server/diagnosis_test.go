@@ -189,7 +189,7 @@ func TestDismissDiagnosisRoute(t *testing.T) {
 		token, err := testhelper.CreateToken(*otherDoctor, svr.config.SigningSecret)
 		require.NoError(t, err)
 		res := testhelper.NewRequest(t, svr.router, http.MethodPatch, "/diagnoses/"+diagnosis.ID.String()+"/dismiss", token, "")
-		require.Equal(t, http.StatusInternalServerError, res.Code)
+		require.Equal(t, http.StatusNotFound, res.Code)
 	})
 
 	t.Run("doctor can dismiss", func(t *testing.T) {

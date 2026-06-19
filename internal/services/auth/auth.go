@@ -2,10 +2,12 @@ package auth
 
 import (
 	"clinic-wise/db/models"
+	"clinic-wise/internal/services/audittrail"
 	authtoken "clinic-wise/pkg/auth"
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -47,6 +49,19 @@ func (s *Service) SignUp(ctx context.Context, req *SignUpRequest) (*SessionRespo
 	if err := s.db.WithContext(ctx).Create(user).Error; err != nil {
 		return nil, err
 	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    user.ID,
+		Action:     "user_signed_up",
+		EntityType: "user",
+		EntityID:   user.ID.String(),
+		Message:    "created a new account",
+		Changes: []audittrail.Change{
+			{Field: "email", After: user.Email},
+			{Field: "role", After: user.Role},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record signup audit", "user_id", user.ID.String(), "error", err)
+	}
 
 	return s.issueSession(ctx, user)
 }
@@ -85,6 +100,20 @@ func (s *Service) InviteUser(ctx context.Context, req *InviteUserRequest) (*User
 	if err := s.db.WithContext(ctx).Create(user).Error; err != nil {
 		return nil, err
 	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    ulid.ULID{},
+		Action:     "user_invited",
+		EntityType: "user",
+		EntityID:   user.ID.String(),
+		Message:    "invited " + user.Email + " as " + string(user.Role),
+		Changes: []audittrail.Change{
+			{Field: "email", After: user.Email},
+			{Field: "role", After: user.Role},
+			{Field: "accepted", After: user.Accepted},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record invite audit", "invited_user_id", user.ID.String(), "error", err)
+	}
 
 	res := UserFromModel(user)
 	return &res, nil
@@ -109,6 +138,18 @@ func (s *Service) AcceptInvite(ctx context.Context, inviteID ulid.ULID, req *Acc
 	user.Accepted = true
 	if err := s.db.WithContext(ctx).Save(&user).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    user.ID,
+		Action:     "invite_accepted",
+		EntityType: "user",
+		EntityID:   user.ID.String(),
+		Message:    "accepted invitation",
+		Changes: []audittrail.Change{
+			{Field: "accepted", Before: false, After: true},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record invite acceptance audit", "user_id", user.ID.String(), "error", err)
 	}
 
 	return s.issueSession(ctx, &user)
@@ -136,6 +177,18 @@ func (s *Service) ResetPassword(ctx context.Context, userID ulid.ULID, req *Rese
 	user.Password = passwordHash
 	if err := s.db.WithContext(ctx).Save(&user).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    user.ID,
+		Action:     "password_reset",
+		EntityType: "user",
+		EntityID:   user.ID.String(),
+		Message:    "reset account password",
+		Changes: []audittrail.Change{
+			{Field: "password", Before: "***", After: "***"},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record password reset audit", "user_id", user.ID.String(), "error", err)
 	}
 
 	return s.issueSession(ctx, &user)

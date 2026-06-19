@@ -1,6 +1,7 @@
 package server
 
 import (
+	"clinic-wise/db/models"
 	"clinic-wise/internal/services/notes"
 	"context"
 	"net/http"
@@ -27,11 +28,22 @@ func (s *Server) noteRoutes() {
 }
 
 func (s *Server) createNote(c *gin.Context) {
+	user := currentUserInfo(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if user.Role != models.Doctor {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only doctors can create notes"})
+		return
+	}
+
 	var req notes.CreateNoteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	req.DoctorID = user.ID
 
 	res, err := s.noteService.Create(c, &req)
 	if err != nil {

@@ -2,8 +2,10 @@ package hospital
 
 import (
 	"context"
+	"log/slog"
 
 	"clinic-wise/db/models"
+	"clinic-wise/internal/services/audittrail"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -21,6 +23,18 @@ func (s *Service) Create(ctx context.Context, req *CreateHospitalRequest) (*Crea
 	hospital := req.ToModel()
 	if err := s.db.WithContext(ctx).Create(hospital).Error; err != nil {
 		return nil, err
+	}
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:    req.UserID,
+		Action:     "hospital_created",
+		EntityType: "hospital",
+		EntityID:   hospital.ID.String(),
+		Message:    "created hospital " + hospital.Name,
+		Changes: []audittrail.Change{
+			{Field: "name", After: hospital.Name},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record hospital create audit", "hospital_id", hospital.ID.String(), "error", err)
 	}
 
 	return &CreateHospitalResponse{

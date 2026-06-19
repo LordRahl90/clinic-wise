@@ -12,6 +12,7 @@ type CreateAppointmentRequest struct {
 	PatientID   string `json:"patient_id"`
 	TimeslotID  string `json:"timeslot_id"`
 	Description string `json:"description"`
+	ActorID     string `json:"-"`
 }
 
 // ToModel converts the CreateAppointmentRequest to a models.Appointment

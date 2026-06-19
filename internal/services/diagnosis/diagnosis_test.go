@@ -76,6 +76,10 @@ func TestService_Create(t *testing.T) {
 	require.NoError(t, db.Where("id = ?", created.ID).First(&stored).Error)
 	require.Equal(t, created.Diagnosis, stored.Diagnosis)
 	require.Equal(t, created.Details, stored.Details)
+
+	var audit models.AuditTrail
+	require.NoError(t, db.Where("entity_type = ? AND entity_id = ?", "diagnosis", created.ID.String()).First(&audit).Error)
+	require.Contains(t, audit.Message, "added diagnosis to appointment")
 }
 
 func TestService_Find(t *testing.T) {

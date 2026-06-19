@@ -11,6 +11,7 @@ var m = []interface{}{
 	&models.User{},
 	&models.Timeslot{},
 	&models.Appointment{},
+	&models.AuditTrail{},
 	&models.Diagnosis{},
 	&models.Note{},
 	&models.Prescription{},

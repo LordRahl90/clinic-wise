@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"clinic-wise/db/models"
@@ -50,7 +49,7 @@ func (s *Server) createPrescription(c *gin.Context) {
 
 	res, err := s.prescriptionService.Create(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -75,11 +74,7 @@ func (s *Server) dispatchPrescription(c *gin.Context) {
 
 	res, err := s.prescriptionService.Dispatch(c.Request.Context(), user.ID, prescriptionID)
 	if err != nil {
-		if errors.Is(err, prescriptionsservice.ErrPrescriptionExpired) || errors.Is(err, prescriptionsservice.ErrPrescriptionUnavailable) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -104,7 +99,7 @@ func (s *Server) getPrescription(c *gin.Context) {
 
 	res, err := s.prescriptionService.Find(c.Request.Context(), user.ID, prescriptionID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, res)
@@ -129,7 +124,7 @@ func (s *Server) getAppointmentPrescriptions(c *gin.Context) {
 
 	res, err := s.prescriptionService.FindByAppointment(c.Request.Context(), user.ID, appointmentID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		httpError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, res)

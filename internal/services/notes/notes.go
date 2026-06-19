@@ -2,10 +2,12 @@ package notes
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"clinic-wise/db/models"
 	"clinic-wise/internal/entities"
+	"clinic-wise/internal/services/audittrail"
 
 	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
@@ -38,6 +40,20 @@ func (s *Service) Create(ctx context.Context, req *CreateNoteRequest) (*Response
 		return nil, err
 	}
 
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       m.DoctorID,
+		Action:        "note_created",
+		EntityType:    "note",
+		EntityID:      m.ID.String(),
+		AppointmentID: m.AppointmentID.String(),
+		Message:       "added note to appointment " + m.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "content", After: m.Content},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record note create audit", "note_id", m.ID.String(), "error", err)
+	}
+
 	return FromModel(m), nil
 }
 
@@ -51,10 +67,25 @@ func (s *Service) Update(ctx context.Context, userID, noteID ulid.ULID, content 
 	if exists.DoctorID != userID {
 		return gorm.ErrRecordNotFound
 	}
+	previousContent := exists.Content
 	exists.Content += content
 
 	if err := s.db.WithContext(ctx).Save(&exists).Error; err != nil {
 		return err
+	}
+
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       userID,
+		Action:        "note_updated",
+		EntityType:    "note",
+		EntityID:      exists.ID.String(),
+		AppointmentID: exists.AppointmentID.String(),
+		Message:       "updated note on appointment " + exists.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "content", Before: previousContent, After: exists.Content},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record note update audit", "note_id", exists.ID.String(), "error", err)
 	}
 
 	return s.writer.Write(ctx, makeNoteEvent(&exists, entities.NoteUpdated))
