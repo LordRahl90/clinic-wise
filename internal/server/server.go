@@ -3,6 +3,7 @@ package server
 import (
 	"clinic-wise/internal/server/middlewares"
 	"clinic-wise/internal/services/appointments"
+	authservice "clinic-wise/internal/services/auth"
 	"clinic-wise/internal/services/hospital"
 	"clinic-wise/internal/services/integrations/queue"
 	"clinic-wise/internal/services/notes"
@@ -25,6 +26,7 @@ type Server struct {
 
 	authMiddleware *middlewares.AuthMiddleware
 
+	authService        AuthService
 	appointmentService appointmentService
 	hospitalService    HospitalsService
 	noteService        NotesService
@@ -37,6 +39,7 @@ func New(config *Config) *Server {
 		router:         router,
 		config:         config,
 		authMiddleware: middlewares.NewAuthMiddleware(config.SigningSecret),
+		authService:    authservice.New(config.DB, config.SigningSecret),
 
 		hospitalService:    hospital.New(config.DB),
 		appointmentService: appointments.New(config.DB),
@@ -45,6 +48,7 @@ func New(config *Config) *Server {
 
 	// register routes
 	s.hospitalRoutes()
+	s.authRoutes()
 	s.appointmentRoutes()
 	s.noteRoutes()
 

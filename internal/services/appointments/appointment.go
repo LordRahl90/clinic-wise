@@ -32,7 +32,7 @@ func (s *Service) Create(ctx context.Context, req *CreateAppointmentRequest) (*R
 // this can only be retrieved by the patient or doctor so a userID is required
 func (s *Service) Find(ctx context.Context, userID, id ulid.ULID) (*Response, error) {
 	var m models.Appointment
-	if err := s.db.WithContext(ctx).First(&m, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&m).Error; err != nil {
 		return nil, err
 	}
 

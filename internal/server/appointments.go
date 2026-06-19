@@ -23,6 +23,7 @@ type appointmentService interface {
 
 func (s *Server) appointmentRoutes() {
 	appointment := s.router.Group("/appointments")
+	appointment.Use(s.authMiddleware.Middleware())
 	{
 		appointment.POST("", s.createAppointment)
 		appointment.GET("", s.findAppointments)
@@ -53,7 +54,25 @@ func (s *Server) createAppointment(c *gin.Context) {
 }
 
 func (s *Server) findAppointments(c *gin.Context) {
+	hospitalIDStr := c.Query("hospital_id")
+	if hospitalIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hospital_id is required"})
+		return
+	}
 
+	hospitalID, err := ulid.ParseStrict(hospitalIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospital_id"})
+		return
+	}
+
+	res, err := s.appointmentService.FindAppointments(c.Request.Context(), hospitalID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }
 
 func (s *Server) findAppointmentsByUser(c *gin.Context) {
