@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/oklog/ulid/v2"
+	ulid "github.com/oklog/ulid/v2"
 )
 
 type Appointment struct {

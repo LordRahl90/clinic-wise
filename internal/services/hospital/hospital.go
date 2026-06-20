@@ -1,9 +1,10 @@
 package hospital
 
 import (
-	"clinic-wise/db/repositories"
 	"context"
 	"database/sql"
+
+	"clinic-wise/db/repositories"
 )
 
 type Service struct {

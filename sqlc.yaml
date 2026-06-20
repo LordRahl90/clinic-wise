@@ -12,7 +12,9 @@ overrides:
   go:
     overrides:
       - column: "*.id"
-        go_type: "github.com/oklog/ulid.ULID"
+        go_type:
+          import: "github.com/oklog/ulid/v2"
+          type: "ULID"
 plugins: [ ]
 rules: [ ]
 options: { }
