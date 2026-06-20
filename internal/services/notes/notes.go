@@ -23,8 +23,9 @@ type DictationService interface {
 }
 
 type Service struct {
-	writer Writer
-	db     *gorm.DB
+	writer           Writer
+	dictationService DictationService
+	db               *gorm.DB
 }
 
 func New(db *gorm.DB, writer Writer) *Service {
@@ -133,4 +134,3 @@ type noopWriter struct{}
 func (noopWriter) Write(context.Context, *entities.Event) error {
 	return nil
 }
-

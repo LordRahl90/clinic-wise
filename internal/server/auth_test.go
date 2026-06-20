@@ -23,34 +23,6 @@ type userBody struct {
 	ID string `json:"id"`
 }
 
-func uniqueEmail(prefix string) string {
-	return prefix + "+" + ulid.Make().String() + "@example.com"
-}
-
-func newAuthServer() *Server {
-	return New(&Config{
-		DB:            db,
-		Port:          "8080",
-		SigningSecret: "secret",
-	})
-}
-
-func adminToken(t *testing.T, svr *Server) string {
-	t.Helper()
-	admin := testhelper.CreateUser(db, models.Admin)
-	require.NotNil(t, admin)
-
-	token, err := authtoken.GenerateToken(t.Context(), authtoken.TokenData{
-		ID:            admin.ID,
-		Role:          admin.Role,
-		SessionID:     ulid.Make().String(),
-		TokenCategory: authtoken.TokenCategoryAccess,
-		Expiry:        int(time.Now().Add(15 * time.Minute).Unix()),
-	}, svr.config.SigningSecret, 15*time.Minute)
-	require.NoError(t, err)
-	return token
-}
-
 func TestAuthSignupRoute(t *testing.T) {
 	svr := newAuthServer()
 
@@ -225,4 +197,32 @@ func TestAuthResetPasswordRoute(t *testing.T) {
 		require.NoError(t, json.Unmarshal(res.Body.Bytes(), &body))
 		require.NotEmpty(t, body.AccessToken)
 	})
+}
+
+func uniqueEmail(prefix string) string {
+	return prefix + "+" + ulid.Make().String() + "@example.com"
+}
+
+func newAuthServer() *Server {
+	return New(&Config{
+		DB:            db,
+		Port:          "8080",
+		SigningSecret: "secret",
+	})
+}
+
+func adminToken(t *testing.T, svr *Server) string {
+	t.Helper()
+	admin := testhelper.CreateUser(db, models.Admin)
+	require.NotNil(t, admin)
+
+	token, err := authtoken.GenerateToken(t.Context(), authtoken.TokenData{
+		ID:            admin.ID,
+		Role:          admin.Role,
+		SessionID:     ulid.Make().String(),
+		TokenCategory: authtoken.TokenCategoryAccess,
+		Expiry:        int(time.Now().Add(15 * time.Minute).Unix()),
+	}, svr.config.SigningSecret, 15*time.Minute)
+	require.NoError(t, err)
+	return token
 }

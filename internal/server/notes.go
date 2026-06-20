@@ -8,13 +8,21 @@ import (
 	"clinic-wise/internal/services/notes"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"github.com/oklog/ulid/v2"
+)
+
+var (
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool { return true },
+	}
 )
 
 type NotesService interface {
 	Create(ctx context.Context, req *notes.CreateNoteRequest) (*notes.Response, error)
 	Update(ctx context.Context, userID, noteID ulid.ULID, content string) error
 	GetAppointmentNotes(ctx context.Context, userID, appointmentID ulid.ULID) ([]notes.Response, error)
+	StartDictation(ctx context.Context, conn *websocket.Conn, req *notes.StartDictationRequest) error
 }
 
 type updateNoteRequest struct {
@@ -158,5 +166,39 @@ func (s *Server) getAppointmentNotes(c *gin.Context) {
 }
 
 func (s *Server) startDictation(c *gin.Context) {
+	// verify userID
+	user := currentUserInfo(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if user.Role != models.Doctor {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only doctors can start dictation"})
+		return
+	}
 
+	var req *notes.StartDictationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.DoctorID = user.ID
+
+	w := c.Writer
+	r := c.Request
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		httpError(c, err)
+		return
+	}
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	err = s.noteService.StartDictation(c.Request.Context(), conn, req)
+	if err != nil {
+		httpError(c, err)
+		return
+	}
 }
