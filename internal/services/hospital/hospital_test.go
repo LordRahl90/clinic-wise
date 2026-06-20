@@ -4,16 +4,16 @@ import (
 	"clinic-wise/db/migrator"
 	"clinic-wise/pkg/testhelper"
 	"context"
+	"database/sql"
 	"log"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 var (
-	db *gorm.DB
+	db *sql.DB
 )
 
 func TestMain(m *testing.M) {
@@ -29,8 +29,8 @@ func TestMain(m *testing.M) {
 		os.Exit(code)
 	}()
 
-	db = testhelper.SetupContainerTestDB(context.TODO(), container)
-	if err := migrator.Migrate(db); err != nil {
+	db = testhelper.SetupContainerTestDBForSQL(context.TODO(), container)
+	if err := migrator.MigrateUp(db); err != nil {
 		log.Fatal(err)
 	}
 

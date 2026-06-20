@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	}()
 
 	db = testhelper.SetupContainerTestDB(context.TODO(), container)
-	if err := migrator.Migrate(db); err != nil {
+	if err := migrator.MigrateUp(db); err != nil {
 		log.Fatal(err)
 	}
 

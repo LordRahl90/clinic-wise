@@ -1,9 +1,10 @@
 package server
 
 import (
-	"clinic-wise/internal/services/notes"
 	"context"
 	"net/http"
+
+	"clinic-wise/internal/services/notes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/oklog/ulid/v2"

@@ -1,26 +1,30 @@
 package hospital
 
 import (
+	"clinic-wise/db/repositories"
 	"context"
-
-	"gorm.io/gorm"
+	"database/sql"
 )
 
 type Service struct {
-	db *gorm.DB
+	queries *repositories.Queries
 }
 
-func New(db *gorm.DB) *Service {
-	return &Service{db: db}
+func New(db *sql.DB) *Service {
+	return &Service{
+		queries: repositories.New(db),
+	}
 }
 
 func (s *Service) Create(ctx context.Context, req *CreateHospitalRequest) (*CreateHospitalResponse, error) {
 	hospital := req.ToModel()
-	if err := s.db.WithContext(ctx).Create(hospital).Error; err != nil {
+	err := s.queries.CreateHospital(ctx, hospital)
+	if err != nil {
 		return nil, err
 	}
 
 	return &CreateHospitalResponse{
-		ID: hospital.ID.String(),
+		ID:   hospital.ID.String(),
+		Name: hospital.Name.String,
 	}, nil
 }

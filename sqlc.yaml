@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    schema: "db/migrations"
+    queries: "db/queries"
+    gen:
+      go:
+        package: "repositories"
+        out: "db/repositories"
+
+overrides:
+  go:
+    overrides:
+      - column: "*.id"
+        go_type: "github.com/oklog/ulid.ULID"
+plugins: [ ]
+rules: [ ]
+options: { }

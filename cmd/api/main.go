@@ -40,7 +40,7 @@ func main() {
 	}
 
 	// we might want this migration to happen independently though.
-	if err := migrator.Migrate(database); err != nil {
+	if err := migrator.MigrateUp(database); err != nil {
 		log.Fatal(err)
 	}
 

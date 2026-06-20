@@ -1,23 +1,35 @@
 package migrator
 
 import (
-	"clinic-wise/db/models"
+	"database/sql"
 
-	"gorm.io/gorm"
+	"clinic-wise/db/migrations"
+
+	"github.com/pressly/goose/v3"
 )
 
-var m = []interface{}{
-	&models.Hospital{},
-	&models.User{},
-	&models.Timeslot{},
-	&models.Appointment{},
-	&models.Note{},
-	&models.Prescription{},
-}
-
-func Migrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(m...); err != nil {
+func MigrateUp(db *sql.DB) error {
+	goose.SetBaseFS(migrations.Migrations)
+	if err := goose.SetDialect("mysql"); err != nil {
 		return err
 	}
+
+	if err := goose.Up(db, "."); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func MigrateDown(db *sql.DB) error {
+	goose.SetBaseFS(migrations.Migrations)
+	if err := goose.SetDialect("mysql"); err != nil {
+		return err
+	}
+
+	if err := goose.Down(db, ""); err != nil {
+		return err
+	}
+
 	return nil
 }
