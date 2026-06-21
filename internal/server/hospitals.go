@@ -12,7 +12,7 @@ import (
 )
 
 type HospitalsService interface {
-	Create(ctx context.Context, req *hospital.CreateHospitalRequest) (*hospital.CreateHospitalResponse, error)
+	Create(ctx context.Context, req *hospital.CreateHospitalRequest) (*hospital.Response, error)
 }
 
 func (s *Server) hospitalRoutes() {

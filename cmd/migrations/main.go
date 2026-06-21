@@ -28,8 +28,12 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database", err)
 	}
+	conn, err := dbase.DB()
+	if err != nil {
+		log.Fatal("Failed to connect to database", err)
+	}
 
-	if err := migrator.Migrate(dbase); err != nil {
+	if err := migrator.MigrateUp(conn); err != nil {
 		log.Fatal("Failed to migrate", err)
 	}
 

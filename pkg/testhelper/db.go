@@ -2,6 +2,7 @@ package testhelper
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 
@@ -17,6 +18,18 @@ func SetupContainerTestDB(ctx context.Context, container *mysqlModule.MySQLConta
 		log.Fatal(err)
 	}
 	db, err := gorm.Open(mysql.Open(fmt.Sprintf("%s?charset=utf8mb4&parseTime=True&loc=Local", dsn)), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
+
+func SetupContainerTestDBForSQL(ctx context.Context, container *mysqlModule.MySQLContainer) *sql.DB {
+	dsn, err := container.ConnectionString(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := sql.Open("mysql", fmt.Sprintf("%s?charset=utf8mb4&parseTime=True&loc=Local", dsn))
 	if err != nil {
 		log.Fatal(err)
 	}

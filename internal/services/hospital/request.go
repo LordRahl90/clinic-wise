@@ -1,7 +1,9 @@
 package hospital
 
 import (
-	"clinic-wise/db/models"
+	"clinic-wise/db/repositories"
+	"database/sql"
+	"time"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -11,9 +13,11 @@ type CreateHospitalRequest struct {
 	Name   string    `json:"name"`
 }
 
-func (r *CreateHospitalRequest) ToModel() *models.Hospital {
-	return &models.Hospital{
-		ID:   ulid.Make(),
-		Name: r.Name,
+func (r *CreateHospitalRequest) ToModel() repositories.CreateHospitalParams {
+	return repositories.CreateHospitalParams{
+		ID:        ulid.Make(),
+		Name:      sql.NullString{String: r.Name, Valid: true},
+		CreatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 }
