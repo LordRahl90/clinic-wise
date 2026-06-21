@@ -1,15 +1,15 @@
 package hospital
 
-import "clinic-wise/db/models"
+import "clinic-wise/db/repositories"
 
-type CreateHospitalResponse struct {
+type Response struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-func FromModel(m *models.Hospital) *CreateHospitalResponse {
-	return &CreateHospitalResponse{
+func FromModel(m repositories.Hospital) *Response {
+	return &Response{
 		ID:   m.ID.String(),
-		Name: m.Name,
+		Name: m.Name.String,
 	}
 }

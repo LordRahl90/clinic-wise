@@ -10,6 +10,7 @@ import (
 	"clinic-wise/db/migrator"
 	"clinic-wise/pkg/testhelper"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,4 +47,13 @@ func TestCreate(t *testing.T) {
 	res, err := svc.Create(t.Context(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, res.ID)
+
+	id, err := ulid.Parse(res.ID)
+	require.NoError(t, err)
+	require.Equal(t, req.Name, res.Name)
+
+	result, err := svc.Find(t.Context(), id)
+	require.NoError(t, err)
+	require.Equal(t, res.ID, result.ID)
+	require.Equal(t, res.Name, result.Name)
 }
