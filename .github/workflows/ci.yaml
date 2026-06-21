@@ -67,4 +67,4 @@ jobs:
           go-version: stable
 
       - name: Test
-        run: make test-with-shuffle
+        run: make shuffle-test

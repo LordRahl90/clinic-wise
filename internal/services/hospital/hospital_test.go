@@ -1,12 +1,13 @@
 package hospital
 
 import (
-	"clinic-wise/db/migrator"
-	"clinic-wise/pkg/testhelper"
 	"context"
 	"log"
 	"os"
 	"testing"
+
+	"clinic-wise/db/migrator"
+	"clinic-wise/pkg/testhelper"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
