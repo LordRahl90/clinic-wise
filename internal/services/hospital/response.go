@@ -13,3 +13,9 @@ func FromModel(m *models.Hospital) *CreateHospitalResponse {
 		Name: m.Name,
 	}
 }
+
+type StatsResponse struct {
+	TotalAppointments int64 `json:"total_appointments"`
+	ActivePatients    int64 `json:"active_patients"`
+	PrescriptionCount int64 `json:"prescription_count"`
+}

@@ -16,17 +16,20 @@ const (
 
 type User struct {
 	ID         ulid.ULID `json:"id" gorm:"size:50"`
-	HospitalID ulid.ULID `json:"hospital_id"`
+	HospitalID ulid.ULID `json:"hospital_id" gorm:"size:50"`
 	FirstName  string    `json:"first_name"`
 	LastName   string    `json:"last_name"`
-	Email      string    `json:"email"`
-	Password   string    `json:"password"`
+	Email      string    `json:"email" gorm:"type:varchar(255);uniqueIndex"`
+	Password   string    `json:"-" gorm:"type:varchar(255)"`
 	Role       UserRole  `json:"role"`
+	Accepted   bool      `json:"accepted" gorm:"default:false"`
 
 	gorm.Model
 }
 
-//func (u User) BeforeCreate(_ *gorm.DB) (err error) {
-//	u.ID = ulid.Make()
-//	return
-//}
+func (u *User) BeforeCreate(_ *gorm.DB) (err error) {
+	if u.ID == (ulid.ULID{}) {
+		u.ID = ulid.Make()
+	}
+	return
+}

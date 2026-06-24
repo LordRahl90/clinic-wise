@@ -27,3 +27,9 @@ func (r *CreateNoteRequest) ToModel() *models.Note {
 		Content:       r.Content,
 	}
 }
+
+type StartDictationRequest struct {
+	HospitalID    ulid.ULID `json:"hospital_id"`
+	DoctorID      ulid.ULID `json:"-"`
+	AppointmentID ulid.ULID `json:"appointment_id"`
+}

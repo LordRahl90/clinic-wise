@@ -1,8 +1,11 @@
 package appointments
 
 import (
-	"clinic-wise/db/models"
 	"context"
+	"log/slog"
+
+	"clinic-wise/db/models"
+	"clinic-wise/internal/services/audittrail"
 
 	"github.com/oklog/ulid/v2"
 	"gorm.io/gorm"
@@ -25,14 +28,68 @@ func (s *Service) Create(ctx context.Context, req *CreateAppointmentRequest) (*R
 		return nil, err
 	}
 
+	actorID, err := ulid.ParseStrict(req.ActorID)
+	if err == nil {
+		err = audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+			ActorID:       actorID,
+			Action:        "appointment_created",
+			EntityType:    "appointment",
+			EntityID:      m.ID.String(),
+			AppointmentID: m.ID.String(),
+			Message:       "created appointment " + m.ID.String(),
+			Changes: []audittrail.Change{
+				{Field: "status", After: m.Status},
+				{Field: "doctor_id", After: m.DoctorID.String()},
+				{Field: "patient_id", After: m.PatientID.String()},
+			},
+		})
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to record appointment create audit", "appointment_id", m.ID.String(), "error", err)
+		}
+	}
+
 	return ResponseFromModel(m), nil
+}
+
+// Complete marks an appointment as completed by the assigned doctor.
+func (s *Service) Complete(ctx context.Context, userID, id ulid.ULID) (*Response, error) {
+	var m models.Appointment
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&m).Error; err != nil {
+		return nil, err
+	}
+
+	if m.DoctorID != userID {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	previousStatus := m.Status
+	m.Status = models.AppointmentStatusCompleted
+	if err := s.db.WithContext(ctx).Save(&m).Error; err != nil {
+		return nil, err
+	}
+
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       userID,
+		Action:        "appointment_completed",
+		EntityType:    "appointment",
+		EntityID:      m.ID.String(),
+		AppointmentID: m.ID.String(),
+		Message:       "completed appointment " + m.ID.String(),
+		Changes: []audittrail.Change{
+			{Field: "status", Before: previousStatus, After: m.Status},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record appointment complete audit", "appointment_id", m.ID.String(), "error", err)
+	}
+
+	return ResponseFromModel(&m), nil
 }
 
 // Find finds an appointment by ID
 // this can only be retrieved by the patient or doctor so a userID is required
 func (s *Service) Find(ctx context.Context, userID, id ulid.ULID) (*Response, error) {
 	var m models.Appointment
-	if err := s.db.WithContext(ctx).First(&m, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&m).Error; err != nil {
 		return nil, err
 	}
 

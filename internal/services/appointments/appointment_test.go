@@ -57,3 +57,36 @@ func TestService_Create(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, res.ID)
 }
+
+func TestService_Complete(t *testing.T) {
+	svc := New(db)
+	doctor := testhelper.CreateUser(db, models.Doctor)
+	require.NotNil(t, doctor)
+	patient := testhelper.CreateUser(db, models.Patient)
+	require.NotNil(t, patient)
+	otherDoctor := testhelper.CreateUser(db, models.Doctor)
+	require.NotNil(t, otherDoctor)
+
+	hospitalID := ulid.Make()
+	appointment := &models.Appointment{
+		ID:          ulid.Make(),
+		HospitalID:  hospitalID,
+		DoctorID:    doctor.ID,
+		PatientID:   patient.ID,
+		TimeslotID:  ulid.Make(),
+		Description: "complete appointment",
+		Status:      models.AppointmentStatusActive,
+	}
+	require.NoError(t, db.Create(appointment).Error)
+
+	res, err := svc.Complete(t.Context(), doctor.ID, appointment.ID)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	var stored models.Appointment
+	require.NoError(t, db.Where("id = ?", appointment.ID).First(&stored).Error)
+	require.Equal(t, models.AppointmentStatusCompleted, stored.Status)
+
+	_, err = svc.Complete(t.Context(), otherDoctor.ID, appointment.ID)
+	require.Error(t, err)
+}
