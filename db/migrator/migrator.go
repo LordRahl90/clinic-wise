@@ -24,3 +24,7 @@ func Migrate(db *gorm.DB) error {
 
 	return nil
 }
+
+func SeedBaseUser(_ *gorm.DB) error {
+	return nil
+}
