@@ -56,7 +56,7 @@ func TestService_Create(t *testing.T) {
 	}
 
 	mockedWriter := &mockWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			slog.InfoContext(ctx, "writing stuff", "event", event)
 			require.NotEmpty(t, event.EventID)
 			require.Equal(t, entities.NoteCreated, event.EventType)
@@ -75,9 +75,9 @@ func TestService_Create(t *testing.T) {
 }
 
 type mockWriter struct {
-	writeFunc func(ctx context.Context, event *entities.Event) error
+	writeFunc func(ctx context.Context, topic string, event *entities.Event) error
 }
 
-func (m *mockWriter) Write(ctx context.Context, event *entities.Event) error {
-	return m.writeFunc(ctx, event)
+func (m *mockWriter) Write(ctx context.Context, topic string, event *entities.Event) error {
+	return m.writeFunc(ctx, topic, event)
 }

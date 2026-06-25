@@ -19,11 +19,11 @@ import (
 )
 
 type mockEventWriter struct {
-	writeFunc func(ctx context.Context, event *entities.Event) error
+	writeFunc func(ctx context.Context, topic string, event *entities.Event) error
 }
 
-func (m *mockEventWriter) Write(ctx context.Context, event *entities.Event) error {
-	return m.writeFunc(ctx, event)
+func (m *mockEventWriter) Write(ctx context.Context, topic string, event *entities.Event) error {
+	return m.writeFunc(ctx, topic, event)
 }
 
 var (
@@ -73,7 +73,7 @@ func TestService_CreateFindAndFindByAppointment(t *testing.T) {
 
 	writerCallCount := 0
 	svc := New(db, &mockEventWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			writerCallCount++
 			require.Equal(t, entities.PrescriptionCreated, event.EventType)
 			require.Equal(t, appointment.ID, event.AppointmentID)
@@ -144,7 +144,7 @@ func TestService_Dispatch(t *testing.T) {
 
 	writerCallCount := 0
 	svc := New(db, &mockEventWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			writerCallCount++
 			switch writerCallCount {
 			case 1:
@@ -211,7 +211,7 @@ func TestService_DispatchRejectsExpiredPrescription(t *testing.T) {
 
 	writerCallCount := 0
 	svc := New(db, &mockEventWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			writerCallCount++
 			require.Equal(t, entities.PrescriptionCreated, event.EventType)
 			return nil
@@ -259,7 +259,7 @@ func TestService_CreateContinuesWhenEventWriteFails(t *testing.T) {
 	require.NoError(t, db.Create(appointment).Error)
 
 	svc := New(db, &mockEventWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			return errors.New("queue unavailable")
 		},
 	})
@@ -304,7 +304,7 @@ func TestService_DispatchContinuesWhenEventWriteFails(t *testing.T) {
 
 	writerCalls := 0
 	svc := New(db, &mockEventWriter{
-		writeFunc: func(ctx context.Context, event *entities.Event) error {
+		writeFunc: func(ctx context.Context, topic string, event *entities.Event) error {
 			writerCalls++
 			if writerCalls == 1 {
 				return nil

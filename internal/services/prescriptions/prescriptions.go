@@ -16,8 +16,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	prescriptionEventTopic = "prescriptions-events"
+)
+
 type EventWriter interface {
-	Write(ctx context.Context, event *entities.Event) error
+	Write(ctx context.Context, topic string, event *entities.Event) error
 }
 
 type Service struct {
@@ -61,7 +65,7 @@ func (s *Service) Create(ctx context.Context, req *CreatePrescriptionRequest) (*
 	if err := s.db.WithContext(ctx).Create(m).Error; err != nil {
 		return nil, err
 	}
-	if err := s.writer.Write(ctx, makePrescriptionEvent(m, entities.PrescriptionCreated)); err != nil {
+	if err := s.writer.Write(ctx, prescriptionEventTopic, makePrescriptionEvent(m, entities.PrescriptionCreated)); err != nil {
 		slog.ErrorContext(ctx, "failed to emit prescription event", "event_type", entities.PrescriptionCreated, "prescription_id", m.ID.String(), "error", err)
 	}
 	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
@@ -108,7 +112,7 @@ func (s *Service) Dispatch(ctx context.Context, pharmacistID, prescriptionID uli
 	if err := s.db.WithContext(ctx).Save(&prescription).Error; err != nil {
 		return nil, err
 	}
-	if err := s.writer.Write(ctx, makePrescriptionEvent(&prescription, entities.PrescriptionUpdated)); err != nil {
+	if err := s.writer.Write(ctx, prescriptionEventTopic, makePrescriptionEvent(&prescription, entities.PrescriptionUpdated)); err != nil {
 		slog.ErrorContext(ctx, "failed to emit prescription event", "event_type", entities.PrescriptionUpdated, "prescription_id", prescription.ID.String(), "error", err)
 	}
 	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
@@ -165,7 +169,7 @@ func (s *Service) FindByAppointment(ctx context.Context, userID, appointmentID u
 
 type noopEventWriter struct{}
 
-func (noopEventWriter) Write(context.Context, *entities.Event) error {
+func (noopEventWriter) Write(context.Context, string, *entities.Event) error {
 	return nil
 }
 

@@ -22,8 +22,8 @@ func New() *Service {
 	}
 }
 
-func (s *Service) Write(ctx context.Context, event *entities.Event) error {
-	slog.InfoContext(ctx, "writing event to queue", "event", event)
+func (s *Service) Write(ctx context.Context, topic string, event *entities.Event) error {
+	slog.InfoContext(ctx, "writing event to queue", "topic", topic, "event", event)
 	s.store <- event
 	return nil
 }

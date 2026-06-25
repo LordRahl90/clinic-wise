@@ -14,8 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const noteEventsTopic = "notes-events"
+
 type Writer interface {
-	Write(ctx context.Context, event *entities.Event) error
+	Write(ctx context.Context, topic string, event *entities.Event) error
 }
 
 type DictationService interface {
@@ -45,7 +47,7 @@ func (s *Service) Create(ctx context.Context, req *CreateNoteRequest) (*Response
 		return nil, err
 	}
 
-	if err := s.writer.Write(ctx, makeNoteEvent(m, entities.NoteCreated)); err != nil {
+	if err := s.writer.Write(ctx, noteEventsTopic, makeNoteEvent(m, entities.NoteCreated)); err != nil {
 		return nil, err
 	}
 
@@ -97,7 +99,7 @@ func (s *Service) Update(ctx context.Context, userID, noteID ulid.ULID, content 
 		slog.ErrorContext(ctx, "failed to record note update audit", "note_id", exists.ID.String(), "error", err)
 	}
 
-	return s.writer.Write(ctx, makeNoteEvent(&exists, entities.NoteUpdated))
+	return s.writer.Write(ctx, noteEventsTopic, makeNoteEvent(&exists, entities.NoteUpdated))
 }
 
 func (s *Service) GetAppointmentNotes(ctx context.Context, userID, appointmentID ulid.ULID) ([]Response, error) {
@@ -131,6 +133,6 @@ func makeNoteEvent(note *models.Note, eventType entities.EventType) *entities.Ev
 
 type noopWriter struct{}
 
-func (noopWriter) Write(context.Context, *entities.Event) error {
+func (noopWriter) Write(context.Context, string, *entities.Event) error {
 	return nil
 }
