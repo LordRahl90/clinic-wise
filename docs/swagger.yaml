@@ -1,0 +1,1368 @@
+basePath: /
+definitions:
+  server.swaggerAcceptInviteRequest:
+    properties:
+      password:
+        type: string
+    type: object
+  server.swaggerAppointmentResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  server.swaggerAuditTrailResponse:
+    properties:
+      action:
+        type: string
+      actor_id:
+        type: string
+      actor_name:
+        type: string
+      actor_role:
+        type: string
+      appointment_id:
+        type: string
+      changes:
+        type: string
+      created_at:
+        type: string
+      entity_id:
+        type: string
+      entity_type:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+    type: object
+  server.swaggerCreateAppointmentRequest:
+    properties:
+      description:
+        type: string
+      doctor_id:
+        type: string
+      hospital_id:
+        type: string
+      patient_id:
+        type: string
+      timeslot_id:
+        type: string
+    type: object
+  server.swaggerCreateDiagnosisRequest:
+    properties:
+      appointment_id:
+        type: string
+      details:
+        type: string
+      diagnosis:
+        type: string
+      hospital_id:
+        type: string
+      patient_id:
+        type: string
+    type: object
+  server.swaggerCreateHospitalRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  server.swaggerCreateNoteRequest:
+    properties:
+      appointment_id:
+        type: string
+      content:
+        type: string
+      hospital_id:
+        type: string
+      patient_id:
+        type: string
+    type: object
+  server.swaggerCreatePrescriptionRequest:
+    properties:
+      appointment_id:
+        type: string
+      details:
+        type: string
+      expiration_date:
+        type: string
+      hospital_id:
+        type: string
+      patient_id:
+        type: string
+    required:
+    - appointment_id
+    - details
+    - expiration_date
+    - hospital_id
+    - patient_id
+    type: object
+  server.swaggerDiagnosisResponse:
+    properties:
+      appointment_id:
+        type: string
+      created_at:
+        type: string
+      details:
+        type: string
+      diagnosis:
+        type: string
+      dismissed:
+        type: boolean
+      doctor_id:
+        type: string
+      hospital_id:
+        type: string
+      id:
+        type: string
+      patient_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  server.swaggerHospitalResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  server.swaggerHospitalStatsResponse:
+    properties:
+      active_patients:
+        type: integer
+      prescription_count:
+        type: integer
+      total_appointments:
+        type: integer
+    type: object
+  server.swaggerInviteUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      hospital_id:
+        type: string
+      last_name:
+        type: string
+      role:
+        type: string
+    type: object
+  server.swaggerNoteResponse:
+    properties:
+      appointment_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  server.swaggerPrescriptionResponse:
+    properties:
+      appointment_id:
+        type: string
+      details:
+        type: string
+      doctor_id:
+        type: string
+      expiration_date:
+        type: string
+      hospital_id:
+        type: string
+      id:
+        type: string
+      patient_id:
+        type: string
+      status:
+        type: string
+    type: object
+  server.swaggerResetPasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+    type: object
+  server.swaggerSessionResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/server.swaggerUserResponse'
+    type: object
+  server.swaggerSignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  server.swaggerSignUpRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      hospital_id:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
+  server.swaggerStartDictationRequest:
+    properties:
+      appointment_id:
+        type: string
+      hospital_id:
+        type: string
+    type: object
+  server.swaggerUserResponse:
+    properties:
+      accepted:
+        type: boolean
+      email:
+        type: string
+      first_name:
+        type: string
+      hospital_id:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      role:
+        type: string
+    type: object
+  server.updateNoteRequest:
+    properties:
+      content:
+        type: string
+      note_id:
+        type: string
+    required:
+    - content
+    - note_id
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@clinicwise.io
+    name: Clinic Wise Support
+  description: REST API for the Clinic Wise healthcare management platform.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Clinic Wise API
+  version: "1.0"
+paths:
+  /appointments:
+    get:
+      description: Returns all appointments for the given hospital. Requires authentication.
+      parameters:
+      - description: Hospital ID (ULID)
+        in: query
+        name: hospital_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerAppointmentResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List appointments for a hospital
+      tags:
+      - Appointments
+    post:
+      consumes:
+      - application/json
+      description: Creates a new appointment. Requires authentication.
+      parameters:
+      - description: Create appointment payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerCreateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerAppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create an appointment
+      tags:
+      - Appointments
+  /appointments/{id}:
+    get:
+      description: Returns a single appointment by ID. Requires authentication.
+      parameters:
+      - description: Appointment ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerAppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get an appointment
+      tags:
+      - Appointments
+  /appointments/{id}/complete:
+    patch:
+      description: Marks an appointment as completed. Requires doctor role.
+      parameters:
+      - description: Appointment ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerAppointmentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Complete an appointment
+      tags:
+      - Appointments
+  /appointments/user:
+    get:
+      description: Returns paginated appointments belonging to the authenticated user.
+      parameters:
+      - description: Page number (1-based)
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerAppointmentResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List appointments for the current user
+      tags:
+      - Appointments
+  /audit-trails/appointment/{id}:
+    get:
+      description: Returns audit log entries for a given appointment. Requires authentication
+        and ownership.
+      parameters:
+      - description: Appointment ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      - description: Filter by actor ID (ULID)
+        in: query
+        name: actor_id
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: to
+        type: string
+      - description: Page number (1-based)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (max 200, default 50)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerAuditTrailResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List audit trail for an appointment
+      tags:
+      - Audit Trails
+  /audit-trails/entity/{type}/{id}:
+    get:
+      description: Returns audit log entries for a given entity type and ID. Requires
+        authentication.
+      parameters:
+      - description: Entity type (e.g. user, appointment)
+        in: path
+        name: type
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by action
+        in: query
+        name: action
+        type: string
+      - description: Filter by actor ID (ULID)
+        in: query
+        name: actor_id
+        type: string
+      - description: Filter from date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: Filter to date (RFC3339)
+        in: query
+        name: to
+        type: string
+      - description: Page number (1-based)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (max 200, default 50)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerAuditTrailResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List audit trail for an entity
+      tags:
+      - Audit Trails
+  /auth/invite:
+    post:
+      consumes:
+      - application/json
+      description: Sends an invitation to a non-patient user (doctor, pharmacist,
+        admin). Requires authentication.
+      parameters:
+      - description: Invite payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerInviteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Invite a user
+      tags:
+      - Auth
+  /auth/invites/{id}/accept:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a pending invite by setting the user's password, activating
+        the account.
+      parameters:
+      - description: Invite ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Accept invite payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerAcceptInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Accept an invitation
+      tags:
+      - Auth
+  /auth/password:
+    patch:
+      consumes:
+      - application/json
+      description: Changes the authenticated user's password.
+      parameters:
+      - description: Reset password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reset password
+      tags:
+      - Auth
+  /auth/signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a session with access/refresh
+        tokens.
+      parameters:
+      - description: Sign-in payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerSignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Sign in
+      tags:
+      - Auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new patient account and returns a session with access/refresh
+        tokens.
+      parameters:
+      - description: Sign-up payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerSignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Sign up a new patient
+      tags:
+      - Auth
+  /diagnoses:
+    get:
+      description: Returns all diagnoses associated with the authenticated user. Requires
+        doctor or patient role.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerDiagnosisResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List diagnoses for the current user
+      tags:
+      - Diagnoses
+    post:
+      consumes:
+      - application/json
+      description: Creates a new diagnosis for a patient. Requires doctor role.
+      parameters:
+      - description: Create diagnosis payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerCreateDiagnosisRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a diagnosis
+      tags:
+      - Diagnoses
+  /diagnoses/{id}:
+    get:
+      description: Returns a single diagnosis by ID. Requires doctor or patient role.
+      parameters:
+      - description: Diagnosis ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a diagnosis
+      tags:
+      - Diagnoses
+  /diagnoses/{id}/dismiss:
+    patch:
+      description: Marks a diagnosis as dismissed. Requires doctor role.
+      parameters:
+      - description: Diagnosis ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerDiagnosisResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Dismiss a diagnosis
+      tags:
+      - Diagnoses
+  /hospitals:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new hospital. Requires admin role.
+      parameters:
+      - description: Create hospital payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerCreateHospitalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerHospitalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a hospital
+      tags:
+      - Hospitals
+  /hospitals/{id}/stats:
+    get:
+      description: Returns total appointments, active patients, and prescription count
+        for a hospital. Requires admin role.
+      parameters:
+      - description: Hospital ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerHospitalStatsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Hospital statistics
+      tags:
+      - Hospitals
+  /notes:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the content of an existing note. Requires doctor role.
+      parameters:
+      - description: Update note payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.updateNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a note
+      tags:
+      - Notes
+    post:
+      consumes:
+      - application/json
+      description: Creates a clinical note for an appointment. Requires doctor role.
+      parameters:
+      - description: Create note payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerCreateNoteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerNoteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a note
+      tags:
+      - Notes
+  /notes/{id}:
+    get:
+      description: Returns a single note by ID. Requires doctor or patient role and
+        ownership.
+      parameters:
+      - description: Note ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerNoteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a note
+      tags:
+      - Notes
+  /notes/appointment/{id}:
+    get:
+      description: Returns all notes for a given appointment. Requires doctor or patient
+        role and ownership.
+      parameters:
+      - description: Appointment ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerNoteResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List notes for an appointment
+      tags:
+      - Notes
+  /notes/dictation:
+    get:
+      description: Upgrades the connection to a WebSocket for real-time voice dictation.
+        Requires doctor role.
+      parameters:
+      - description: Dictation request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerStartDictationRequest'
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Start voice dictation (WebSocket)
+      tags:
+      - Notes
+  /prescriptions:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new prescription for a patient. Requires doctor role.
+      parameters:
+      - description: Create prescription payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.swaggerCreatePrescriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerPrescriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a prescription
+      tags:
+      - Prescriptions
+  /prescriptions/{id}:
+    get:
+      description: Returns a single prescription by ID. Requires doctor or patient
+        role.
+      parameters:
+      - description: Prescription ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerPrescriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a prescription
+      tags:
+      - Prescriptions
+  /prescriptions/{id}/dispatch:
+    patch:
+      description: Marks a prescription as dispatched. Requires pharmacist role.
+      parameters:
+      - description: Prescription ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.swaggerPrescriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Dispatch a prescription
+      tags:
+      - Prescriptions
+  /prescriptions/appointment/{id}:
+    get:
+      description: Returns all prescriptions for a given appointment. Requires doctor
+        or patient role.
+      parameters:
+      - description: Appointment ID (ULID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/server.swaggerPrescriptionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List prescriptions for an appointment
+      tags:
+      - Prescriptions
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT Bearer token. Example: "Bearer <token>"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

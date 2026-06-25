@@ -29,6 +29,20 @@ func (s *Server) prescriptionRoutes() {
 	}
 }
 
+// createPrescription godoc
+//
+//	@Summary		Create a prescription
+//	@Description	Creates a new prescription for a patient. Requires doctor role.
+//	@Tags			Prescriptions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerCreatePrescriptionRequest	true	"Create prescription payload"
+//	@Success		200		{object}	swaggerPrescriptionResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Router			/prescriptions [post]
 func (s *Server) createPrescription(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -55,6 +69,19 @@ func (s *Server) createPrescription(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// dispatchPrescription godoc
+//
+//	@Summary		Dispatch a prescription
+//	@Description	Marks a prescription as dispatched. Requires pharmacist role.
+//	@Tags			Prescriptions
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Prescription ID (ULID)"
+//	@Success		200	{object}	swaggerPrescriptionResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/prescriptions/{id}/dispatch [patch]
 func (s *Server) dispatchPrescription(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -80,6 +107,19 @@ func (s *Server) dispatchPrescription(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// getPrescription godoc
+//
+//	@Summary		Get a prescription
+//	@Description	Returns a single prescription by ID. Requires doctor or patient role.
+//	@Tags			Prescriptions
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Prescription ID (ULID)"
+//	@Success		200	{object}	swaggerPrescriptionResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/prescriptions/{id} [get]
 func (s *Server) getPrescription(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -105,6 +145,19 @@ func (s *Server) getPrescription(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// getAppointmentPrescriptions godoc
+//
+//	@Summary		List prescriptions for an appointment
+//	@Description	Returns all prescriptions for a given appointment. Requires doctor or patient role.
+//	@Tags			Prescriptions
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Appointment ID (ULID)"
+//	@Success		200	{array}		swaggerPrescriptionResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/prescriptions/appointment/{id} [get]
 func (s *Server) getAppointmentPrescriptions(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {

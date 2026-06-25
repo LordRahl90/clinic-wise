@@ -18,3 +18,6 @@ clean:
 
 build-image:
 	docker build -t lordrahl/clinic-wise .
+
+swagger:
+	swag init -g ./cmd/api/main.go -o ./docs --parseDependency --parseInternal --parseDepth 4

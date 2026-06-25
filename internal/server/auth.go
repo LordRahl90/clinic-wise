@@ -30,6 +30,18 @@ func (s *Server) authRoutes() {
 	}
 }
 
+// signUp godoc
+//
+//	@Summary		Sign up a new patient
+//	@Description	Registers a new patient account and returns a session with access/refresh tokens.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		swaggerSignUpRequest	true	"Sign-up payload"
+//	@Success		200		{object}	swaggerSessionResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/auth/signup [post]
 func (s *Server) signUp(c *gin.Context) {
 	var req authservice.SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,6 +58,18 @@ func (s *Server) signUp(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// signIn godoc
+//
+//	@Summary		Sign in
+//	@Description	Authenticates a user and returns a session with access/refresh tokens.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		swaggerSignInRequest	true	"Sign-in payload"
+//	@Success		200		{object}	swaggerSessionResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/auth/signin [post]
 func (s *Server) signIn(c *gin.Context) {
 	var req authservice.SignInRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,6 +86,19 @@ func (s *Server) signIn(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// inviteUser godoc
+//
+//	@Summary		Invite a user
+//	@Description	Sends an invitation to a non-patient user (doctor, pharmacist, admin). Requires authentication.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerInviteUserRequest	true	"Invite payload"
+//	@Success		200		{object}	swaggerUserResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/auth/invite [post]
 func (s *Server) inviteUser(c *gin.Context) {
 	userInfo := currentUserInfo(c)
 	if userInfo == nil {
@@ -85,6 +122,18 @@ func (s *Server) inviteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// acceptInvite godoc
+//
+//	@Summary		Accept an invitation
+//	@Description	Accepts a pending invite by setting the user's password, activating the account.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string							true	"Invite ID (ULID)"
+//	@Param			body	body		swaggerAcceptInviteRequest	true	"Accept invite payload"
+//	@Success		200		{object}	swaggerSessionResponse
+//	@Failure		400		{object}	map[string]string
+//	@Router			/auth/invites/{id}/accept [post]
 func (s *Server) acceptInvite(c *gin.Context) {
 	inviteID, err := ulid.ParseStrict(c.Param("id"))
 	if err != nil {
@@ -107,6 +156,19 @@ func (s *Server) acceptInvite(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// resetPassword godoc
+//
+//	@Summary		Reset password
+//	@Description	Changes the authenticated user's password.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerResetPasswordRequest	true	"Reset password payload"
+//	@Success		200		{object}	swaggerSessionResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/auth/password [patch]
 func (s *Server) resetPassword(c *gin.Context) {
 	userInfo := currentUserInfo(c)
 	if userInfo == nil {

@@ -29,6 +29,20 @@ func (s *Server) diagnosisRoutes() {
 	}
 }
 
+// createDiagnosis godoc
+//
+//	@Summary		Create a diagnosis
+//	@Description	Creates a new diagnosis for a patient. Requires doctor role.
+//	@Tags			Diagnoses
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerCreateDiagnosisRequest	true	"Create diagnosis payload"
+//	@Success		200		{object}	swaggerDiagnosisResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Router			/diagnoses [post]
 func (s *Server) createDiagnosis(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -56,6 +70,19 @@ func (s *Server) createDiagnosis(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// getDiagnosis godoc
+//
+//	@Summary		Get a diagnosis
+//	@Description	Returns a single diagnosis by ID. Requires doctor or patient role.
+//	@Tags			Diagnoses
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Diagnosis ID (ULID)"
+//	@Success		200	{object}	swaggerDiagnosisResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/diagnoses/{id} [get]
 func (s *Server) getDiagnosis(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -82,6 +109,17 @@ func (s *Server) getDiagnosis(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// listDiagnoses godoc
+//
+//	@Summary		List diagnoses for the current user
+//	@Description	Returns all diagnoses associated with the authenticated user. Requires doctor or patient role.
+//	@Tags			Diagnoses
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		swaggerDiagnosisResponse
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/diagnoses [get]
 func (s *Server) listDiagnoses(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -102,6 +140,19 @@ func (s *Server) listDiagnoses(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// dismissDiagnosis godoc
+//
+//	@Summary		Dismiss a diagnosis
+//	@Description	Marks a diagnosis as dismissed. Requires doctor role.
+//	@Tags			Diagnoses
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Diagnosis ID (ULID)"
+//	@Success		200	{object}	swaggerDiagnosisResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/diagnoses/{id}/dismiss [patch]
 func (s *Server) dismissDiagnosis(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {

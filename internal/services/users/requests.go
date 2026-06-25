@@ -1,8 +1,9 @@
 package users
 
 import (
-	"clinic-wise/db/models"
 	"strings"
+
+	"clinic-wise/db/models"
 
 	"github.com/oklog/ulid/v2"
 )
@@ -12,6 +13,7 @@ type CreateUserRequest struct {
 	FirstName  string          `json:"first_name" binding:"required"`
 	LastName   string          `json:"last_name" binding:"required"`
 	Email      string          `json:"email" binding:"required,email"`
+	Password   string          `json:"password" binding:"required"`
 	Role       models.UserRole `json:"role" binding:"required"`
 }
 

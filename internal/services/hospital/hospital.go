@@ -38,7 +38,8 @@ func (s *Service) Create(ctx context.Context, req *CreateHospitalRequest) (*Crea
 	}
 
 	return &CreateHospitalResponse{
-		ID: hospital.ID.String(),
+		ID:   hospital.ID.String(),
+		Name: hospital.Name,
 	}, nil
 }
 

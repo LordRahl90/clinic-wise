@@ -25,6 +25,20 @@ func (s *Server) hospitalRoutes() {
 	}
 }
 
+// createHospital godoc
+//
+//	@Summary		Create a hospital
+//	@Description	Creates a new hospital. Requires admin role.
+//	@Tags			Hospitals
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerCreateHospitalRequest	true	"Create hospital payload"
+//	@Success		200		{object}	swaggerHospitalResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Router			/hospitals [post]
 func (s *Server) createHospital(c *gin.Context) {
 	var req *hospital.CreateHospitalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,6 +66,19 @@ func (s *Server) createHospital(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// hospitalStats godoc
+//
+//	@Summary		Hospital statistics
+//	@Description	Returns total appointments, active patients, and prescription count for a hospital. Requires admin role.
+//	@Tags			Hospitals
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Hospital ID (ULID)"
+//	@Success		200	{object}	swaggerHospitalStatsResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/hospitals/{id}/stats [get]
 func (s *Server) hospitalStats(c *gin.Context) {
 	user, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
 	if err != nil {

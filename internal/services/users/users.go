@@ -1,11 +1,13 @@
 package users
 
 import (
-	"clinic-wise/db/models"
 	"context"
 	"errors"
 	"strings"
 
+	"clinic-wise/db/models"
+
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -38,6 +40,12 @@ func (s *Service) Create(ctx context.Context, req *CreateUserRequest) (*Response
 	if err != nil {
 		return nil, err
 	}
+
+	b, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = string(b)
 
 	existing, err := s.FindByEmail(ctx, user.Email)
 	if err == nil {

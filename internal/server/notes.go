@@ -42,6 +42,20 @@ func (s *Server) noteRoutes() {
 	}
 }
 
+// createNote godoc
+//
+//	@Summary		Create a note
+//	@Description	Creates a clinical note for an appointment. Requires doctor role.
+//	@Tags			Notes
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerCreateNoteRequest	true	"Create note payload"
+//	@Success		200		{object}	swaggerNoteResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Router			/notes [post]
 func (s *Server) createNote(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -68,6 +82,20 @@ func (s *Server) createNote(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// updateNote godoc
+//
+//	@Summary		Update a note
+//	@Description	Updates the content of an existing note. Requires doctor role.
+//	@Tags			Notes
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		updateNoteRequest	true	"Update note payload"
+//	@Success		200		{object}	map[string]string
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Router			/notes [patch]
 func (s *Server) updateNote(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -99,6 +127,20 @@ func (s *Server) updateNote(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
 
+// getNote godoc
+//
+//	@Summary		Get a note
+//	@Description	Returns a single note by ID. Requires doctor or patient role and ownership.
+//	@Tags			Notes
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Note ID (ULID)"
+//	@Success		200	{object}	swaggerNoteResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Router			/notes/{id} [get]
 func (s *Server) getNote(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -130,6 +172,20 @@ func (s *Server) getNote(c *gin.Context) {
 	c.JSON(http.StatusOK, notes.FromModel(&note))
 }
 
+// getAppointmentNotes godoc
+//
+//	@Summary		List notes for an appointment
+//	@Description	Returns all notes for a given appointment. Requires doctor or patient role and ownership.
+//	@Tags			Notes
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Appointment ID (ULID)"
+//	@Success		200	{array}		swaggerNoteResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Router			/notes/appointment/{id} [get]
 func (s *Server) getAppointmentNotes(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -165,6 +221,18 @@ func (s *Server) getAppointmentNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// startDictation godoc
+//
+//	@Summary		Start voice dictation (WebSocket)
+//	@Description	Upgrades the connection to a WebSocket for real-time voice dictation. Requires doctor role.
+//	@Tags			Notes
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerStartDictationRequest	true	"Dictation request payload"
+//	@Success		101	{string}	string	"Switching Protocols"
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/notes/dictation [get]
 func (s *Server) startDictation(c *gin.Context) {
 	// verify userID
 	user := currentUserInfo(c)

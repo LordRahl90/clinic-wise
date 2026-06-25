@@ -1,14 +1,15 @@
 package main
 
 import (
-	"clinic-wise/db"
-	"clinic-wise/db/migrator"
-	"clinic-wise/db/models"
+	"clinic-wise/db/seeder"
+	"context"
 	"log"
 	"os"
 
+	"clinic-wise/db"
+	"clinic-wise/db/migrator"
+
 	"github.com/joho/godotenv"
-	"github.com/oklog/ulid/v2"
 )
 
 func main() {
@@ -33,12 +34,8 @@ func main() {
 		log.Fatal("Failed to migrate", err)
 	}
 
-	us := models.User{
-		ID: ulid.Make(),
-	}
-
-	if err := dbase.Create(&us).Error; err != nil {
-		log.Fatal("Failed to create user", err)
+	if err := seeder.SeedBaseUser(context.Background(), dbase); err != nil {
+		log.Fatal("Failed to seed base user", err)
 	}
 
 	log.Println("Migration completed successfully")

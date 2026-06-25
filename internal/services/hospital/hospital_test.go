@@ -49,6 +49,7 @@ func TestCreate(t *testing.T) {
 	res, err := svc.Create(t.Context(), req)
 	require.NoError(t, err)
 	require.NotEmpty(t, res.ID)
+	require.Equal(t, req.Name, res.Name)
 }
 
 func TestStats(t *testing.T) {

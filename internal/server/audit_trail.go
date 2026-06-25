@@ -55,6 +55,24 @@ func parseFilterQuery(c *gin.Context) audittrailservice.FilterQuery {
 	return f
 }
 
+// listAppointmentAuditTrail godoc
+//
+//	@Summary		List audit trail for an appointment
+//	@Description	Returns audit log entries for a given appointment. Requires authentication and ownership.
+//	@Tags			Audit Trails
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id			path		string	true	"Appointment ID (ULID)"
+//	@Param			action		query		string	false	"Filter by action"
+//	@Param			actor_id	query		string	false	"Filter by actor ID (ULID)"
+//	@Param			from		query		string	false	"Filter from date (RFC3339)"
+//	@Param			to			query		string	false	"Filter to date (RFC3339)"
+//	@Param			page		query		int		false	"Page number (1-based)"
+//	@Param			limit		query		int		false	"Page size (max 200, default 50)"
+//	@Success		200			{array}		swaggerAuditTrailResponse
+//	@Failure		400			{object}	map[string]string
+//	@Failure		401			{object}	map[string]string
+//	@Router			/audit-trails/appointment/{id} [get]
 func (s *Server) listAppointmentAuditTrail(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {
@@ -76,6 +94,25 @@ func (s *Server) listAppointmentAuditTrail(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// listEntityAuditTrail godoc
+//
+//	@Summary		List audit trail for an entity
+//	@Description	Returns audit log entries for a given entity type and ID. Requires authentication.
+//	@Tags			Audit Trails
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			type		path		string	true	"Entity type (e.g. user, appointment)"
+//	@Param			id			path		string	true	"Entity ID"
+//	@Param			action		query		string	false	"Filter by action"
+//	@Param			actor_id	query		string	false	"Filter by actor ID (ULID)"
+//	@Param			from		query		string	false	"Filter from date (RFC3339)"
+//	@Param			to			query		string	false	"Filter to date (RFC3339)"
+//	@Param			page		query		int		false	"Page number (1-based)"
+//	@Param			limit		query		int		false	"Page size (max 200, default 50)"
+//	@Success		200			{array}		swaggerAuditTrailResponse
+//	@Failure		400			{object}	map[string]string
+//	@Failure		401			{object}	map[string]string
+//	@Router			/audit-trails/entity/{type}/{id} [get]
 func (s *Server) listEntityAuditTrail(c *gin.Context) {
 	user := currentUserInfo(c)
 	if user == nil {

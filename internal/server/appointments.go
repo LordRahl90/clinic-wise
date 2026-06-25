@@ -33,6 +33,19 @@ func (s *Server) appointmentRoutes() {
 	}
 }
 
+// createAppointment godoc
+//
+//	@Summary		Createan appointment
+//	@Description	Creates a new appointment. Requires authentication.
+//	@Tags			Appointments
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		swaggerCreateAppointmentRequest	true	"Create appointment payload"
+//	@Success		200		{object}	swaggerAppointmentResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/appointments [post]
 func (s *Server) createAppointment(c *gin.Context) {
 	var request *appointments.CreateAppointmentRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -56,6 +69,18 @@ func (s *Server) createAppointment(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// findAppointments godoc
+//
+//	@Summary		List appointments for a hospital
+//	@Description	Returns all appointments for the given hospital. Requires authentication.
+//	@Tags			Appointments
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			hospital_id	query		string	true	"Hospital ID (ULID)"
+//	@Success		200			{array}		swaggerAppointmentResponse
+//	@Failure		400			{object}	map[string]string
+//	@Failure		401			{object}	map[string]string
+//	@Router			/appointments [get]
 func (s *Server) findAppointments(c *gin.Context) {
 	hospitalIDStr := c.Query("hospital_id")
 	if hospitalIDStr == "" {
@@ -78,6 +103,19 @@ func (s *Server) findAppointments(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// findAppointmentsByUser godoc
+//
+//	@Summary		List appointments for the current user
+//	@Description	Returns paginated appointments belonging to the authenticated user.
+//	@Tags			Appointments
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page	query		int	true	"Page number (1-based)"
+//	@Param			limit	query		int	true	"Page size"
+//	@Success		200		{array}		swaggerAppointmentResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Router			/appointments/user [get]
 func (s *Server) findAppointmentsByUser(c *gin.Context) {
 	userID, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
 	if err != nil {
@@ -105,6 +143,18 @@ func (s *Server) findAppointmentsByUser(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// findAppointment godoc
+//
+//	@Summary		Get an appointment
+//	@Description	Returns a single appointment by ID. Requires authentication.
+//	@Tags			Appointments
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Appointment ID (ULID)"
+//	@Success		200	{object}	swaggerAppointmentResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Router			/appointments/{id} [get]
 func (s *Server) findAppointment(c *gin.Context) {
 	id, err := ulid.ParseStrict(c.Param("id"))
 	if err != nil {
@@ -127,6 +177,19 @@ func (s *Server) findAppointment(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// completeAppointment godoc
+//
+//	@Summary		Complete an appointment
+//	@Description	Marks an appointment as completed. Requires doctor role.
+//	@Tags			Appointments
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Appointment ID (ULID)"
+//	@Success		200	{object}	swaggerAppointmentResponse
+//	@Failure		400	{object}	map[string]string
+//	@Failure		401	{object}	map[string]string
+//	@Failure		403	{object}	map[string]string
+//	@Router			/appointments/{id}/complete [patch]
 func (s *Server) completeAppointment(c *gin.Context) {
 	user, err := middlewares.ExtractUserInfo(c, s.config.SigningSecret)
 	if err != nil {

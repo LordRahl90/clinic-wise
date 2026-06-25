@@ -1,6 +1,27 @@
+// Package main is the entry point for the Clinic Wise API server.
+//
+//	@title			Clinic Wise API
+//	@version		1.0
+//	@description	REST API for the Clinic Wise healthcare management platform.
+//	@termsOfService	http://swagger.io/terms/
+//
+//	@contact.name	Clinic Wise Support
+//	@contact.email	support@clinicwise.io
+//
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+//
+//	@host		localhost:8080
+//	@BasePath	/
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				JWT Bearer token. Example: "Bearer <token>"
 package main
 
 import (
+	_ "clinic-wise/docs"
 	"context"
 	"log"
 	"log/slog"

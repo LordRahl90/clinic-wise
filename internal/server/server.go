@@ -3,6 +3,7 @@ package server
 import (
 	"log/slog"
 
+	_ "clinic-wise/docs"
 	"clinic-wise/internal/server/middlewares"
 	"clinic-wise/internal/services/appointments"
 	"clinic-wise/internal/services/audittrail"
@@ -14,6 +15,8 @@ import (
 	"clinic-wise/internal/services/prescriptions"
 
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -72,6 +75,9 @@ func New(config *Config) *Server {
 	s.diagnosisRoutes()
 	s.noteRoutes()
 	s.prescriptionRoutes()
+
+	// swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	return s
 }
