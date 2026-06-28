@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"clinic-wise/db/models"
 	"clinic-wise/pkg/testhelper"
 
+	"github.com/google/uuid"
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -38,17 +40,22 @@ func TestMain(m *testing.M) {
 	}
 
 	code = m.Run()
+	fmt.Printf("Tests completed with %d tests.\n", code)
 }
 
 func TestService_SignUpAndSignIn(t *testing.T) {
 	svc := New(db, "secret")
 	hospitalID := ulid.Make().String()
+	email := uuid.NewString() + "jane.doe@example.com"
+	t.Cleanup(func() {
+		require.NoError(t, db.Where("email = ?", email).Delete(&models.User{}).Error)
+	})
 
 	signUpRes, err := svc.SignUp(t.Context(), &SignUpRequest{
 		HospitalID: hospitalID,
 		FirstName:  "Jane",
 		LastName:   "Doe",
-		Email:      "jane.doe@example.com",
+		Email:      email,
 		Password:   "password123",
 	})
 	require.NoError(t, err)
@@ -57,7 +64,7 @@ func TestService_SignUpAndSignIn(t *testing.T) {
 	require.NotEmpty(t, signUpRes.RefreshToken)
 
 	signInRes, err := svc.SignIn(t.Context(), &SignInRequest{
-		Email:    "jane.doe@example.com",
+		Email:    email,
 		Password: "password123",
 	})
 	require.NoError(t, err)
@@ -73,7 +80,7 @@ func TestService_InviteAcceptAndResetPassword(t *testing.T) {
 		HospitalID: hospitalID,
 		FirstName:  "John",
 		LastName:   "Smith",
-		Email:      "john.smith@example.com",
+		Email:      uuid.NewString() + "john.smith@example.com",
 		Role:       models.Doctor,
 	})
 	require.NoError(t, err)
@@ -119,7 +126,7 @@ func TestService_InviteRejectsPatients(t *testing.T) {
 		HospitalID: ulid.Make().String(),
 		FirstName:  "Pat",
 		LastName:   "Ient",
-		Email:      "patient.invite@example.com",
+		Email:      uuid.NewString() + "patient.invite@example.com",
 		Role:       models.Patient,
 	})
 	require.Error(t, err)

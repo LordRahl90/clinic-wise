@@ -33,3 +33,10 @@ type StartDictationRequest struct {
 	DoctorID      ulid.ULID `json:"-"`
 	AppointmentID ulid.ULID `json:"appointment_id"`
 }
+
+type NoteFeeback struct {
+	AppointmentID ulid.ULID `json:"appointmentId"`
+	Sequence      int       `json:"sequence"`
+	Text          string    `json:"text"`
+	IsFinal       bool      `json:"isFinal"`
+}

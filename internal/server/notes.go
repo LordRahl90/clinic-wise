@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"clinic-wise/db/models"
@@ -22,7 +23,8 @@ type NotesService interface {
 	Create(ctx context.Context, req *notes.CreateNoteRequest) (*notes.Response, error)
 	Update(ctx context.Context, userID, noteID ulid.ULID, content string) error
 	GetAppointmentNotes(ctx context.Context, userID, appointmentID ulid.ULID) ([]notes.Response, error)
-	StartDictation(ctx context.Context, conn *websocket.Conn, req *notes.StartDictationRequest) error
+	StartDictation(ctx context.Context, conn *websocket.Conn) error
+	Feedback(ctx context.Context, req notes.NoteFeeback) error
 }
 
 type updateNoteRequest struct {
@@ -32,14 +34,33 @@ type updateNoteRequest struct {
 
 func (s *Server) noteRoutes() {
 	noteGroup := s.router.Group("/notes")
+	noteGroup.GET("/dictation", s.startDictation)
+	// we don't use the regular auth for this.
+	// we might need a separate auth/webhook auth secret from the provider
+	noteGroup.POST("/dictation/feedback", s.handleDictationFeedback)
 	noteGroup.Use(s.authMiddleware.Middleware())
 	{
 		noteGroup.POST("", s.createNote)
 		noteGroup.PATCH("", s.updateNote)
 		noteGroup.GET("/:id", s.getNote)
 		noteGroup.GET("/appointment/:id", s.getAppointmentNotes)
-		noteGroup.GET("/dictation", s.startDictation)
+
 	}
+}
+
+func (s *Server) handleDictationFeedback(c *gin.Context) {
+	var req notes.NoteFeeback
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := s.noteService.Feedback(c.Request.Context(), req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
 
 // createNote godoc
@@ -235,22 +256,32 @@ func (s *Server) getAppointmentNotes(c *gin.Context) {
 //	@Router			/notes/dictation [get]
 func (s *Server) startDictation(c *gin.Context) {
 	// verify userID
-	user := currentUserInfo(c)
-	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	if user.Role != models.Doctor {
-		c.JSON(http.StatusForbidden, gin.H{"error": "only doctors can start dictation"})
-		return
-	}
+	// user := currentUserInfo(c)
+	// if user == nil {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	// 	return
+	// }
 
-	var req *notes.StartDictationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	req.DoctorID = user.ID
+	//fmt.Printf("\n\nUser ID: %s, Role: %s\n\n", user.ID.String(), user.Role)
+
+	// fmt.Printf("\n\nhello new world: %s\n\n", user.Role)
+
+	// if user.Role != models.Doctor && user.Role != models.Admin {
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "only doctors can start dictation"})
+	// 	return
+	// }
+
+	// fmt.Printf("\n\nnow we proceed\n\n")
+
+	// var req *notes.StartDictationRequest
+	// if err := c.ShouldBindJSON(&req); err != nil {
+	// 	slog.ErrorContext(c.Request.Context(), "error", "error", err.Error())
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	// req.DoctorID = user.ID
+
+	fmt.Printf("\n\nWe are here\n\n")
 
 	w := c.Writer
 	r := c.Request
@@ -264,7 +295,7 @@ func (s *Server) startDictation(c *gin.Context) {
 		_ = conn.Close()
 	}()
 
-	err = s.noteService.StartDictation(c.Request.Context(), conn, req)
+	err = s.noteService.StartDictation(c.Request.Context(), conn)
 	if err != nil {
 		httpError(c, err)
 		return

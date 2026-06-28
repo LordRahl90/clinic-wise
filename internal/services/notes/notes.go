@@ -2,6 +2,7 @@ package notes
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -102,8 +103,65 @@ func (s *Service) Update(ctx context.Context, userID, noteID ulid.ULID, content 
 	return s.writer.Write(ctx, noteEventsTopic, makeNoteEvent(&exists, entities.NoteUpdated))
 }
 
+func (s *Service) UpdateWithAppointmentID(ctx context.Context, userID, appointmentID ulid.ULID, content string) error {
+	var exists models.Note
+	if err := s.db.WithContext(ctx).Where("appointment_id = ?", appointmentID).First(&exists).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		} else {
+			exists.ID = ulid.Make()
+			exists.AppointmentID = appointmentID
+			exists.DoctorID = userID
+		}
+	}
+
+	// mocked check to make sure that auth is preserved
+	if exists.DoctorID != userID {
+		return gorm.ErrRecordNotFound
+	}
+	previousContent := exists.Content
+	exists.Content += content
+
+	if err := s.db.WithContext(ctx).Save(&exists).Error; err != nil {
+		return err
+	}
+
+	if err := audittrail.Record(ctx, s.db, &audittrail.RecordRequest{
+		ActorID:       userID,
+		Action:        "note_updated",
+		EntityType:    "note",
+		EntityID:      exists.ID.String(),
+		AppointmentID: exists.AppointmentID.String(),
+		Message:       "updated note on appointment " + exists.AppointmentID.String(),
+		Changes: []audittrail.Change{
+			{Field: "content", Before: previousContent, After: exists.Content},
+		},
+	}); err != nil {
+		slog.ErrorContext(ctx, "failed to record note update audit", "note_id", exists.ID.String(), "error", err)
+	}
+
+	return s.writer.Write(ctx, noteEventsTopic, makeNoteEvent(&exists, entities.NoteUpdated))
+}
+
 func (s *Service) GetAppointmentNotes(ctx context.Context, userID, appointmentID ulid.ULID) ([]Response, error) {
-	var notes []models.Note
+	var (
+		user  *models.User
+		appt  *models.Appointment
+		notes []models.Note
+	)
+
+	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	if err := s.db.WithContext(ctx).Where("id = ?", appointmentID).First(&appt).Error; err != nil {
+		return nil, err
+	}
+
+	if userID != appt.PatientID && user.Role != models.Doctor {
+		return nil, gorm.ErrRecordNotFound
+	}
+
 	if err := s.db.WithContext(ctx).Where("appointment_id = ?", appointmentID).Find(&notes).Error; err != nil {
 		return nil, err
 	}
