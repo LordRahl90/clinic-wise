@@ -48,11 +48,10 @@ The docker compose has a mysql service that can be used for the database.
 
 - `POST /appointments`
   - Authenticated users can create appointments.
-- `GET /appointments?hospital_id=<id>`
+- `GET /hospitals/:id/appointments`
   - Lists appointments for a hospital.
-- `GET /appointments/user?page=<n>&limit=<m>`
-  - Lists appointments for the authenticated user.
-- `GET /appointments/:id`
+  - Requires auth  - Requires authentication.
+  - Pagination with `page` and `limit` query parameters.ET /appointments/:id`
   - Doctor or patient on the appointment only.
 - `PATCH /appointments/:id/complete`
   - Doctor only.
@@ -61,9 +60,30 @@ The docker compose has a mysql service that can be used for the database.
 ### Notes
 
 - `POST /notes`
+  - Doctor only.
 - `PATCH /notes`
+  - Doctor only.
 - `GET /notes/:id`
+  - Doctor or patient on the note only.
 - `GET /notes/appointment/:id`
+  - Doctor or patient on the appointment only.
+- `GET /notes/dictation` (WebSocket)
+  - Starts real-time dictation stream.
+- `POST /notes/dictation/feedback`
+  - Receives dictation feedback chunks/final transcript.
+  - Returns `204 No Content` on success.
+
+### Diagnoses
+
+- `POST /diagnoses`
+  - Doctor only.
+- `GET /diagnoses`
+  - Doctor or patient only.
+  - Lists diagnoses for the authenticated user.
+- `GET /diagnoses/:id`
+  - Doctor or patient only.
+- `PATCH /diagnoses/:id/dismiss`
+  - Doctor only.
 
 ### Prescriptions
 
@@ -85,3 +105,4 @@ The docker compose has a mysql service that can be used for the database.
 - Prescription event writes are best-effort: failures are logged and do not fail the request.
 - If no queue writer is configured, the server uses a no-op prescription event writer.
 - All role checks are enforced at the route layer.
+- Hospital appointment lookup now uses the nested hospital route (`/hospitals/:id/appointments`) for clearer API structure.

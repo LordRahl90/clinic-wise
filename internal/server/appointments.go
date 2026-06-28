@@ -22,11 +22,12 @@ type appointmentService interface {
 }
 
 func (s *Server) appointmentRoutes() {
+	s.router.GET("/hospitals/:id/appointments", s.authMiddleware.Middleware(), s.findHospitalAppointments)
 	appointment := s.router.Group("/appointments")
 	appointment.Use(s.authMiddleware.Middleware())
 	{
 		appointment.POST("", s.createAppointment)
-		appointment.GET("", s.findAppointments)
+
 		appointment.GET("/user", s.findAppointmentsByUser)
 		appointment.GET("/:id", s.findAppointment)
 		appointment.PATCH("/:id/complete", s.completeAppointment)
@@ -35,7 +36,7 @@ func (s *Server) appointmentRoutes() {
 
 // createAppointment godoc
 //
-//	@Summary		Createan appointment
+//	@Summary		Create an appointment
 //	@Description	Creates a new appointment. Requires authentication.
 //	@Tags			Appointments
 //	@Accept			json
@@ -69,28 +70,28 @@ func (s *Server) createAppointment(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// findAppointments godoc
+// findHospitalAppointments godoc
 //
 //	@Summary		List appointments for a hospital
 //	@Description	Returns all appointments for the given hospital. Requires authentication.
 //	@Tags			Appointments
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			hospital_id	query		string	true	"Hospital ID (ULID)"
+//	@Param			hospitalId	path		string	true	"Hospital ID (ULID)"
 //	@Success		200			{array}		swaggerAppointmentResponse
 //	@Failure		400			{object}	map[string]string
 //	@Failure		401			{object}	map[string]string
-//	@Router			/appointments [get]
-func (s *Server) findAppointments(c *gin.Context) {
-	hospitalIDStr := c.Query("hospital_id")
+//	@Router			/hospitals/{hospitalId}/appointments [get]
+func (s *Server) findHospitalAppointments(c *gin.Context) {
+	hospitalIDStr := c.Param("id")
 	if hospitalIDStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "hospital_id is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hospitalId is required"})
 		return
 	}
 
 	hospitalID, err := ulid.ParseStrict(hospitalIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospital_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId"})
 		return
 	}
 

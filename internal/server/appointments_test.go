@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -13,55 +12,6 @@ import (
 	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 )
-
-// newAppointmentServer returns a test server with a consistent signing secret.
-func newAppointmentServer() *Server {
-	return New(&Config{
-		DB:            db,
-		Port:          "8080",
-		SigningSecret: "secret",
-	})
-}
-
-// appointmentFixture creates a doctor, patient, and a persisted appointment between them.
-func appointmentFixture(t *testing.T, svr *Server, hospitalID ulid.ULID) (*models.User, *models.User, *appointments.Response) {
-	t.Helper()
-	doctor := testhelper.CreateUser(db, models.Doctor)
-	require.NotNil(t, doctor)
-	patient := testhelper.CreateUser(db, models.Patient)
-	require.NotNil(t, patient)
-
-	payload, err := json.Marshal(appointments.CreateAppointmentRequest{
-		HospitalID:  hospitalID.String(),
-		DoctorID:    doctor.ID.String(),
-		PatientID:   patient.ID.String(),
-		TimeslotID:  ulid.Make().String(),
-		Description: "Fixture appointment",
-	})
-	require.NoError(t, err)
-
-	token, err := testhelper.CreateToken(*patient, svr.config.SigningSecret)
-	require.NoError(t, err)
-
-	res := testhelper.NewRequest(t, svr.router, http.MethodPost, "/appointments", token, string(payload))
-	require.Equal(t, http.StatusOK, res.Code)
-
-	var body appointments.Response
-	require.NoError(t, json.Unmarshal(res.Body.Bytes(), &body))
-	require.NotEmpty(t, body.ID)
-
-	return doctor, patient, &body
-}
-
-// containsID reports whether a response slice contains the given appointment ID.
-func containsID(list []appointments.Response, id string) bool {
-	for _, r := range list {
-		if r.ID == id {
-			return true
-		}
-	}
-	return false
-}
 
 // ── POST /appointments ──────────────────────────────────────────────────────
 
@@ -231,7 +181,7 @@ func TestFindAppointmentsByUserRoute(t *testing.T) {
 	})
 }
 
-// ── GET /appointments ───────────────────────────────────────────────────────
+// ── GET /hospitals/:hospitalId/appointments ────────────────────────────────
 
 func TestFindAppointmentsRoute(t *testing.T) {
 	svr := newAppointmentServer()
@@ -244,22 +194,18 @@ func TestFindAppointmentsRoute(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("no auth returns 401", func(t *testing.T) {
-		res := testhelper.NewRequest(t, svr.router, http.MethodGet, "/appointments", "", "")
+		url := "/hospitals/" + hospitalID.String() + "/appointments"
+		res := testhelper.NewRequest(t, svr.router, http.MethodGet, url, "", "")
 		require.Equal(t, http.StatusUnauthorized, res.Code)
 	})
 
-	t.Run("missing hospital_id returns 400", func(t *testing.T) {
-		res := testhelper.NewRequest(t, svr.router, http.MethodGet, "/appointments", token, "")
-		require.Equal(t, http.StatusBadRequest, res.Code)
-	})
-
 	t.Run("invalid hospital_id returns 400", func(t *testing.T) {
-		res := testhelper.NewRequest(t, svr.router, http.MethodGet, "/appointments?hospital_id=not-valid", token, "")
+		res := testhelper.NewRequest(t, svr.router, http.MethodGet, "/hospitals/not-valid/appointments", token, "")
 		require.Equal(t, http.StatusBadRequest, res.Code)
 	})
 
 	t.Run("returns appointments for the given hospital", func(t *testing.T) {
-		url := fmt.Sprintf("/appointments?hospital_id=%s", hospitalID.String())
+		url := "/hospitals/" + hospitalID.String() + "/appointments"
 		res := testhelper.NewRequest(t, svr.router, http.MethodGet, url, token, "")
 		require.Equal(t, http.StatusOK, res.Code)
 
@@ -270,7 +216,7 @@ func TestFindAppointmentsRoute(t *testing.T) {
 	})
 
 	t.Run("different hospital_id returns empty list", func(t *testing.T) {
-		url := fmt.Sprintf("/appointments?hospital_id=%s", ulid.Make().String())
+		url := "/hospitals/" + ulid.Make().String() + "/appointments"
 		res := testhelper.NewRequest(t, svr.router, http.MethodGet, url, token, "")
 		require.Equal(t, http.StatusOK, res.Code)
 
@@ -313,4 +259,53 @@ func TestCompleteAppointmentRoute(t *testing.T) {
 		require.NoError(t, db.Where("id = ?", apptID).First(&stored).Error)
 		require.Equal(t, models.AppointmentStatusCompleted, stored.Status)
 	})
+}
+
+// newAppointmentServer returns a test server with a consistent signing secret.
+func newAppointmentServer() *Server {
+	return New(&Config{
+		DB:            db,
+		Port:          "8080",
+		SigningSecret: "secret",
+	})
+}
+
+// appointmentFixture creates a doctor, patient, and a persisted appointment between them.
+func appointmentFixture(t *testing.T, svr *Server, hospitalID ulid.ULID) (*models.User, *models.User, *appointments.Response) {
+	t.Helper()
+	doctor := testhelper.CreateUser(db, models.Doctor)
+	require.NotNil(t, doctor)
+	patient := testhelper.CreateUser(db, models.Patient)
+	require.NotNil(t, patient)
+
+	payload, err := json.Marshal(appointments.CreateAppointmentRequest{
+		HospitalID:  hospitalID.String(),
+		DoctorID:    doctor.ID.String(),
+		PatientID:   patient.ID.String(),
+		TimeslotID:  ulid.Make().String(),
+		Description: "Fixture appointment",
+	})
+	require.NoError(t, err)
+
+	token, err := testhelper.CreateToken(*patient, svr.config.SigningSecret)
+	require.NoError(t, err)
+
+	res := testhelper.NewRequest(t, svr.router, http.MethodPost, "/appointments", token, string(payload))
+	require.Equal(t, http.StatusOK, res.Code)
+
+	var body appointments.Response
+	require.NoError(t, json.Unmarshal(res.Body.Bytes(), &body))
+	require.NotEmpty(t, body.ID)
+
+	return doctor, patient, &body
+}
+
+// containsID reports whether a response slice contains the given appointment ID.
+func containsID(list []appointments.Response, id string) bool {
+	for _, r := range list {
+		if r.ID == id {
+			return true
+		}
+	}
+	return false
 }
